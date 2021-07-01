@@ -51,7 +51,7 @@ else:
 print("2d model loaded!")
 
 model = module.signatures['serving_default']
-print(module.summary())
+#print(module.summary())
 
 assert 0
 

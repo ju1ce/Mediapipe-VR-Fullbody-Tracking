@@ -9,4 +9,6 @@ python\python.exe -m pip install torch
 python\python.exe -m pip install opencv-python
 python\python.exe -m pip install scipy
 
+python\python.exe -m pip install mediapipe
+
 pause
