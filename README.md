@@ -5,7 +5,7 @@ This is still a work in progress, not meant to be used yet. Main purpose is for 
 
 The bat files are configured to use a local instalation of python in /python, but you can also use the scripts directly. You also need the 2d-3d VideoPose3d model to run this, for which you can message me on discord: my username is juice#6370
 
-#MediaPipe version 
+# MediaPipe version 
 
 Thanks to John_ on the ApriltagTrackers discord, who reminded me that MediaPipe pose does in fact have 3d positions as well, the script was modified to use that version. It seems to be faster, pretty accurate, and should be easier to setup. Beside not needing the 3d model, the instructions on how to use are the same.
 
