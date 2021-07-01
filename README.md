@@ -23,3 +23,10 @@ Running the script will first load the libraries, load the models, open the came
 After a while, you will be prompted to put on your headset. Put it on, stand straight, and wait for 5 seconds to calibrate your height.
 
 Use the two sliders on screen to spin and tilt the trackers correctly.
+
+## TODO:
+
+Mediapipe actualy returns feet rotation as well, which I currently ignore. Whether it is accurate enough to actualy use should be tested, however.
+
+While calibrating with sliders is pretty fast and easy, automatic calibration using controller positions should be possible as well.
+
