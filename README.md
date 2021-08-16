@@ -3,7 +3,7 @@ A test repository using Mediapipe for fullbody tracking in VR with a single came
 
 This is still a work in progress, but an executable is now available for anyone to try out. Compared to my other free fbt project, ApriltagTrackers, this works less acurately, you need far more room and depth detection is not the greatest, but it has the benefit of not needing trackers.
 
-For any questions or bug reports, please write into the ApriltagTrackers discord :https://discord.gg/g2ctkXB4bb
+For any questions or bug reports, please write into the ApriltagTrackers discord: https://discord.gg/g2ctkXB4bb
 
 ## How to run:
 
