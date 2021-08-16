@@ -16,6 +16,9 @@ def sendToSteamVR(text):
     pipe.close()
     
     return array
+    
+sendToSteamVR("settings 5 2");
+assert 0
 
 pipe = open(r'\\.\pipe\ApriltagPipeIn', 'rb+', buffering=0)
 

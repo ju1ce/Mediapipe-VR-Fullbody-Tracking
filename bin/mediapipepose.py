@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 from helpers import draw_pose, get_bbox, keypoints_to_original, normalize_screen_coordinates, get_rot
 from scipy.spatial.transform import Rotation as R
+from guitest import getparams
 
 def mediapipeTo3dpose(lms):
     
@@ -48,15 +49,17 @@ mp_pose = mp.solutions.pose
 
 print("Reading parameters...")
 
+param = getparams()
+
 #PARAMETERS:
 #model =  1          #TODO: add parameter for which model size to use
-maximgsize = 800                #to prevent working with huge images, images that have one axis larger than this value will be downscaled.
-cameraid = 0                    #to use with an usb or virtual webcam. If 0 doesnt work/opens wrong camera, try numbers 1-5 or so
+maximgsize = param["imgsize"]               #to prevent working with huge images, images that have one axis larger than this value will be downscaled.
+cameraid = param["camid"]                    #to use with an usb or virtual webcam. If 0 doesnt work/opens wrong camera, try numbers 1-5 or so
 #cameraid = "http://192.168.1.102:8080/video"   #to use ip webcam, uncomment this line and change to your ip
-hmd_to_neck_offset = [0,-0.20,0.10]    #offset of your hmd to the base of your neck, to ensure the tracking is stable even if you look around. Default is 20cm down, 10cm back.
-preview_skeleton = False               #if True, whole skeleton will appear in vr 2 meters in front of you. Good to visualize if everything is working
-dont_wait_hmd = False                    #dont wait for movement from hmd, start inference immediately.
-rotate_image = None # cv2.ROTATE_90_CLOCKWISE # cv2.ROTATE_90_COUTERCLOCKWISE # cv2.ROTATE_180 # None # if you want, rotate the camera
+hmd_to_neck_offset = param["neckoffset"]    #offset of your hmd to the base of your neck, to ensure the tracking is stable even if you look around. Default is 20cm down, 10cm back.
+preview_skeleton = param["prevskel"]             #if True, whole skeleton will appear in vr 2 meters in front of you. Good to visualize if everything is working
+dont_wait_hmd = param["waithmd"]                  #dont wait for movement from hmd, start inference immediately.
+rotate_image = param["rotate"] # cv2.ROTATE_90_CLOCKWISE # cv2.ROTATE_90_COUTERCLOCKWISE # cv2.ROTATE_180 # None # if you want, rotate the camera
 
 
 print("Opening camera...")
