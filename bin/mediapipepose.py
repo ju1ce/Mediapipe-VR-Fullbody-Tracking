@@ -1,11 +1,15 @@
 print("Importing libraries....")
 
 import os
+import sys
+
+sys.path.append(os.getcwd())    #embedable python doesnt find local modules without this line
+
 import time
 import threading
 import cv2
 import numpy as np
-from helpers import draw_pose, get_bbox, keypoints_to_original, normalize_screen_coordinates, get_rot
+from helpers import draw_pose, keypoints_to_original, normalize_screen_coordinates, get_rot
 from scipy.spatial.transform import Rotation as R
 from guitest import getparams
 
@@ -71,12 +75,17 @@ def camera_thread():
     #A seperate camera thread that captures images and saves it to a variable to be read by the main program.
     #Mostly used to free the main thread from image decoding overhead and to ensure frames are just skipped if detection is slower than camera fps
     global cameraid, image_from_thread, image_ready
+    
+    if len(cameraid) <= 2:
+        cameraid = int(cameraid)
+    
     cap = cv2.VideoCapture(cameraid)
     print("Camera opened!")
     while True:
         ret, image_from_thread = cap.read()    
 
         image_ready = True
+        
         assert ret, "Camera capture failed! Check the cameraid parameter."
 
 thread = threading.Thread(target=camera_thread, daemon=True)
@@ -104,14 +113,32 @@ print("Connecting to SteamVR")
  
 #ask the driver, how many devices are connected to ensure we dont add additional trackers 
 #in case we restart the program
-numtrackers = int(sendToSteamVR("numtrackers")[2])
-
+numtrackers = sendToSteamVR("numtrackers")
+for i in range(10):
+    if "error" in numtrackers:
+        print("Error in SteamVR connection. Retrying...")
+        time.sleep(1)
+        numtrackers = sendToSteamVR("numtrackers")
+    else:
+        break
+        
+if "error" in numtrackers:
+    print("Could not connect to SteamVR after 10 retries!")
+    time.sleep(10)
+    assert 0, "Could not connect to SteamVR after 10 retries"
+ 
+numtrackers = int(numtrackers[2])
+ 
 #games use 3 trackers, but we can also send the entire skeleton if we want to look at how it works
 totaltrackers = 17 if preview_skeleton else 3
 
 for i in range(numtrackers,totaltrackers):
     #sending addtracker to our driver will... add a tracker. to our driver.
-    print(sendToSteamVR("addtracker"))
+    resp = sendToSteamVR("addtracker")
+    while "error" in resp:
+        resp = sendToSteamVR("addtracker")
+        print(resp)
+        time.sleep(0.2)
     time.sleep(0.2)
 
 print("Starting pose detector...")
@@ -128,7 +155,11 @@ while True:
     #It querries steamvr for the headset position each second, then check whether its height
     #changed for more than 10cm from the starting position. If yes, we assumethe headset is in use.
     
-    array = sendToSteamVR("getdevicepose 0")  
+    array = sendToSteamVR("getdevicepose 0")
+    while "error" in array:
+        print("Failed to get HMD pose from SteamVR! Retrying...")
+        time.sleep(1)
+        array = sendToSteamVR("getdevicepose 0")  
     
     headsetpos = float(array[4])
     if prevhead is None:

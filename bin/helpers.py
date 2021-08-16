@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import tensorflow as tf
 from scipy.spatial.transform import Rotation as R
 
 # Dictionary that maps from joint names to keypoint indices.
@@ -53,36 +52,6 @@ def draw_pose(frame,pose,size):
     for sk in EDGES:
         cv2.line(frame,(int(pose[sk[0],1]),int(pose[sk[0],0])),(int(pose[sk[1],1]),int(pose[sk[1],0])),(0,255,0),3)
 
-def get_bbox(img,points,imgsize):
-    
-    #print(points.shape)
-    #points = np.reshape(points,(-1,2), order="C")
-    
-    startsize = max(img.shape)
-    #print(startsize)
-    
-    kleft = min(points[:,0])
-    kright = max(points[:,0])
-    kbottom = min(points[:,1])
-    ktop = max(points[:,1])
-    kcenter = ((kright+kleft)/2,(ktop+kbottom)/2)
-    ksize = max([kright-kleft,ktop-kbottom]) * 1.3
-    kleftcorner = (kcenter[0]-ksize/2,kcenter[1]-ksize/2)
-    
-    #print(kcenter)
-    #print(ksize)
-    #print(img.shape)
-    
-    scenter = [kcenter[0]/img.shape[1],kcenter[1]/img.shape[2]]
-    ssize = [ksize/(2*img.shape[1]),ksize/(2*img.shape[2])]
-    
-    bboxes = [[scenter[0]-ssize[0],scenter[1]-ssize[1],scenter[0]+ssize[0],scenter[1]+ssize[1]]]
-
-    #print(bboxes)
-    
-    img = tf.image.crop_and_resize(img,bboxes,[0],[imgsize,imgsize])
-
-    return img, kcenter, ksize
 
 def keypoints_to_original(scale,center,points):
     scores = points[:,2]

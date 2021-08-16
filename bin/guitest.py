@@ -81,6 +81,9 @@ def getparams():
 
     pickle.dump(param,open("params.p","wb"))
     
+    window.destroy()
+    
     return param
 
-print(getparams());
+if __name__ == "__main__":
+    print(getparams());
