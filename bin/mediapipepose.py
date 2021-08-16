@@ -132,20 +132,30 @@ numtrackers = int(numtrackers[2])
 #games use 3 trackers, but we can also send the entire skeleton if we want to look at how it works
 totaltrackers = 17 if preview_skeleton else 3
 
+roles = ["TrackerRole_Waist", "TrackerRole_LeftFoot", "TrackerRole_RightFoot"]
+
 for i in range(numtrackers,totaltrackers):
     #sending addtracker to our driver will... add a tracker. to our driver.
-    resp = sendToSteamVR("addtracker")
+    resp = sendToSteamVR(f"addtracker MediaPipeTracker{i} {roles[i]}")
     while "error" in resp:
-        resp = sendToSteamVR("addtracker")
+        resp = sendToSteamVR(f"addtracker MediaPipeTracker{i} {roles[i]}")
         print(resp)
         time.sleep(0.2)
     time.sleep(0.2)
+    
+resp = sendToSteamVR("settings 50 0.5")
+while "error" in resp:
+    resp = sendToSteamVR("settings 50 0.5")
+    print(resp)
+    time.sleep(1)
+
 
 print("Starting pose detector...")
 
 pose = mp_pose.Pose(                #create our detector. These are default parameters as used in the tutorial. 
     min_detection_confidence=0.5,
-    min_tracking_confidence=0.5)
+    min_tracking_confidence=0.5,
+    model_complexity=1)
 
 print("Waiting for you to put on your headset...")
 
@@ -259,11 +269,11 @@ while(True):
                 if not preview_skeleton:
                     for i in [(0,1),(5,2),(6,0)]:
                         joint = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
-                        sendToSteamVR(f"updatepose {i[1]} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} 0 0.8") 
+                        sendToSteamVR(f"updatepose {i[1]} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} 0.05 0.8") 
                 else:
                     for i in range(17):
                         joint = pose3d[i] - offset      #if previewing skeleton, send the position of each keypoint to steamvr without rotation
-                        sendToSteamVR(f"updatepose {i} {joint[0]} {joint[1]} {joint[2]-2} 1 0 0 0 0 0.8") 
+                        sendToSteamVR(f"updatepose {i} {joint[0]} {joint[1]} {joint[2]-2} 1 0 0 0 0.05 0.8") 
 
     print("inference time:", time.time()-t0)        #print how long it took to detect and calculate everything
 
