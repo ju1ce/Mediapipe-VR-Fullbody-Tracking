@@ -9,43 +9,9 @@ import time
 import threading
 import cv2
 import numpy as np
-from helpers import draw_pose, keypoints_to_original, normalize_screen_coordinates, get_rot
+from helpers import mediapipeTo3dpose, get_rot_mediapipe,draw_pose, keypoints_to_original, normalize_screen_coordinates, get_rot
 from scipy.spatial.transform import Rotation as R
 from guitest import getparams
-
-def mediapipeTo3dpose(lms):
-    
-    #convert landmarks returned by mediapipe to skeleton that I use.
-    #lms = results.pose_world_landmarks.landmark
-    
-    pose = np.zeros((17,3))
-
-    pose[0]=[lms[28].x,lms[28].y,lms[28].z]
-    pose[1]=[lms[26].x,lms[26].y,lms[26].z]
-    pose[2]=[lms[24].x,lms[24].y,lms[24].z]
-    pose[3]=[lms[23].x,lms[23].y,lms[23].z]
-    pose[4]=[lms[25].x,lms[25].y,lms[25].z]
-    pose[5]=[lms[27].x,lms[27].y,lms[27].z]
-
-    pose[6]=[0,0,0]
-
-    #some keypoints in mediapipe are missing, so we calculate them as avarage of two keypoints
-    pose[7]=[lms[12].x/2+lms[11].x/2,lms[12].y/2+lms[11].y/2,lms[12].z/2+lms[11].z/2]
-    pose[8]=[lms[10].x/2+lms[9].x/2,lms[10].y/2+lms[9].y/2,lms[10].z/2+lms[9].z/2]
-
-    pose[9]=[lms[0].x,lms[0].y,lms[0].z]
-
-    pose[10]=[lms[15].x,lms[15].y,lms[15].z]
-    pose[11]=[lms[13].x,lms[13].y,lms[13].z]
-    pose[12]=[lms[11].x,lms[11].y,lms[11].z]
-
-    pose[13]=[lms[12].x,lms[12].y,lms[12].z]
-    pose[14]=[lms[14].x,lms[14].y,lms[14].z]
-    pose[15]=[lms[16].x,lms[16].y,lms[16].z]
-
-    pose[16]=[pose[6][0]/2+pose[7][0]/2,pose[6][1]/2+pose[7][1]/2,pose[6][2]/2+pose[7][2]/2]
-
-    return pose
 
 import mediapipe as mp
 mp_drawing = mp.solutions.drawing_utils
@@ -64,7 +30,11 @@ hmd_to_neck_offset = param["neckoffset"]    #offset of your hmd to the base of y
 preview_skeleton = param["prevskel"]             #if True, whole skeleton will appear in vr 2 meters in front of you. Good to visualize if everything is working
 dont_wait_hmd = param["waithmd"]                  #dont wait for movement from hmd, start inference immediately.
 rotate_image = param["rotate"] # cv2.ROTATE_90_CLOCKWISE # cv2.ROTATE_90_COUTERCLOCKWISE # cv2.ROTATE_180 # None # if you want, rotate the camera
-
+camera_latency = param["camlatency"]
+smoothing = param["smooth"]
+feet_rotation = param["feetrot"]
+calib_scale = param["calib_scale"]
+calib_tilt = param["calib_tilt"]
 
 print("Opening camera...")
 
@@ -130,9 +100,12 @@ if "error" in numtrackers:
 numtrackers = int(numtrackers[2])
  
 #games use 3 trackers, but we can also send the entire skeleton if we want to look at how it works
-totaltrackers = 17 if preview_skeleton else 3
+totaltrackers = 23 if preview_skeleton else 3
 
-roles = ["TrackerRole_Waist", "TrackerRole_LeftFoot", "TrackerRole_RightFoot"]
+roles = ["TrackerRole_Waist", "TrackerRole_RightFoot", "TrackerRole_LeftFoot"]
+
+for i in range(len(roles),totaltrackers):
+    roles.append("None")
 
 for i in range(numtrackers,totaltrackers):
     #sending addtracker to our driver will... add a tracker. to our driver.
@@ -143,9 +116,9 @@ for i in range(numtrackers,totaltrackers):
         time.sleep(0.2)
     time.sleep(0.2)
     
-resp = sendToSteamVR("settings 50 0.5")
+resp = sendToSteamVR(f"settings 50 {smoothing}")
 while "error" in resp:
-    resp = sendToSteamVR("settings 50 0.5")
+    resp = sendToSteamVR(f"settings 50 {smoothing}")
     print(resp)
     time.sleep(1)
 
@@ -155,53 +128,48 @@ print("Starting pose detector...")
 pose = mp_pose.Pose(                #create our detector. These are default parameters as used in the tutorial. 
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5,
-    model_complexity=1)
-
-print("Waiting for you to put on your headset...")
-
-prevhead = None
-while True:
-    #This loop tries to detect when you put your headset on.
-    #It querries steamvr for the headset position each second, then check whether its height
-    #changed for more than 10cm from the starting position. If yes, we assumethe headset is in use.
-    
-    array = sendToSteamVR("getdevicepose 0")
-    while "error" in array:
-        print("Failed to get HMD pose from SteamVR! Retrying...")
-        time.sleep(1)
-        array = sendToSteamVR("getdevicepose 0")  
-    
-    headsetpos = float(array[4])
-    if prevhead is None:
-        prevhead = headsetpos
-    elif abs(prevhead-headsetpos) > 0.1 or dont_wait_hmd:
-        print("Headset detected!")
-        break
-    time.sleep(1)
-    
-for i in range(5):
-    #just wait for 5 seconds to ensure the user is in place, so height will be calibrated properly
-    print(f"Calibration will start in {5-i}")
-    time.sleep(1)
-   
+    model_complexity=1) 
+  
 global_rot_y = R.from_euler('y',0,degrees=True)     #default rotations, for 0 degrees around y and x
 global_rot_x = R.from_euler('x',0,degrees=True) 
+global_rot_z = R.from_euler('z',0,degrees=True) 
 def rot_change_y(value):
     global global_rot_y                                     #callback functions. Whenever the value on sliders are changed, they are called
     global_rot_y = R.from_euler('y',value,degrees=True)     #and the rotation is updated with the new value.
     
 def rot_change_x(value):
     global global_rot_x
-    global_rot_x = R.from_euler('x',value,degrees=True) 
+    global_rot_x = R.from_euler('x',value-90,degrees=True) 
+    
+def rot_change_z(value):
+    global global_rot_z
+    global_rot_z = R.from_euler('z',value-180,degrees=True) 
+  
+recalibrate = False 
+def change_recalibrate(value):
+    global recalibrate 
+    if value == 1:
+        recalibrate = True
+    else:
+        recalibrate = False
+       
+posescale = 1       
+def change_scale(value):
+    global posescale
+    posescale = value/50 + 0.5
     
 cv2.namedWindow("out")
 cv2.createTrackbar("rotation_y","out",0,360,rot_change_y)   #Create rotation sliders and assign callback functions
-cv2.createTrackbar("rotation_x","out",0,360,rot_change_x)
+if not calib_tilt:
+    cv2.createTrackbar("rotation_x","out",90,180,rot_change_x)
+    cv2.createTrackbar("rotation_z","out",180,360,rot_change_z)
+if not calib_scale:
+    cv2.createTrackbar("scale","out",25,100,change_scale)
+if calib_scale or calib_tilt:
+    cv2.createTrackbar("recalib","out",0,1,change_recalibrate)
   
 #Main program loop:
 
-recalibrate = True  
-posescale = 1
 rotation = 0
 
 i = 0
@@ -240,12 +208,17 @@ while(True):
         pose3d[:,0] = -pose3d[:,0]      #flip the points a bit since steamvrs coordinate system is a bit diffrent
         pose3d[:,1] = -pose3d[:,1]
 
+        pose3d_og = pose3d.copy()
         
         for j in range(pose3d.shape[0]):        #apply the rotations from the sliders
+            pose3d[j] = global_rot_z.apply(pose3d[j])
             pose3d[j] = global_rot_x.apply(pose3d[j])
             pose3d[j] = global_rot_y.apply(pose3d[j])
         
-        rots = get_rot(pose3d)          #get rotation data of feet and hips from the position-only skeleton data
+        if not feet_rotation:
+            rots = get_rot(pose3d)          #get rotation data of feet and hips from the position-only skeleton data
+        else:
+            rots = get_rot_mediapipe(pose3d)
         
         array = sendToSteamVR("getdevicepose 0")        #get hmd data to allign our skeleton to
 
@@ -257,11 +230,50 @@ while(True):
                                                                 #the skeleton (unlike the eyes/nose, which jump around) and can be calculated from hmd.
             
             if recalibrate:
-                #calculate the height of the skeleton, calculate the height in steamvr as distance of hmd from the ground.
-                #divide the two to get scale 
-                skelSize = np.max(pose3d, axis=0)-np.min(pose3d, axis=0)+0.2
-                posescale = headsetpos[1]/skelSize[1]
+            
+                if calib_tilt:
+                    feet_middle = (pose3d_og[0] + pose3d_og[5])/2
+                
+                    ## roll calibaration
+                    
+                    value = np.arctan2(feet_middle[0],-feet_middle[1])
+                    
+                    print("Precalib z angle: ", value * 57.295779513)
+                    
+                    global_rot_z = R.from_euler('z',-value)
+                    
+                    for j in range(pose3d_og.shape[0]):
+                        pose3d_og[j] = global_rot_z.apply(pose3d_og[j])
+                        
+                    feet_middle = (pose3d_og[0] + pose3d_og[5])/2
+                    value = np.arctan2(feet_middle[0],-feet_middle[1])
+                    
+                    print("Postcalib z angle: ", value * 57.295779513)
+                     
+                    ##tilt calibration
+                     
+                    
+                    value = np.arctan2(feet_middle[2],-feet_middle[1])
+                    
+                    print("Precalib x angle: ", value * 57.295779513)
+                    
+                    global_rot_x = R.from_euler('x',value)
+                
+                    for j in range(pose3d_og.shape[0]):
+                        pose3d_og[j] = global_rot_x.apply(pose3d_og[j])
+                        
+                    feet_middle = (pose3d_og[0] + pose3d_og[5])/2
+                    value = np.arctan2(feet_middle[2],-feet_middle[1])
+                    
+                    print("Postcalib x angle: ", value * 57.295779513)
+                
+                if calib_scale:
+                    #calculate the height of the skeleton, calculate the height in steamvr as distance of hmd from the ground.
+                    #divide the two to get scale 
+                    skelSize = np.max(pose3d_og, axis=0)-np.min(pose3d_og, axis=0)
+                    posescale = headsetpos[1]/skelSize[1]
                 recalibrate = False
+                
             else:
                 pose3d = pose3d * posescale     #rescale skeleton to calibrated height
                 #print(pose3d)
@@ -269,11 +281,11 @@ while(True):
                 if not preview_skeleton:
                     for i in [(0,1),(5,2),(6,0)]:
                         joint = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
-                        sendToSteamVR(f"updatepose {i[1]} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} 0.05 0.8") 
+                        sendToSteamVR(f"updatepose {i[1]} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} {camera_latency} 0.8") 
                 else:
-                    for i in range(17):
+                    for i in range(23):
                         joint = pose3d[i] - offset      #if previewing skeleton, send the position of each keypoint to steamvr without rotation
-                        sendToSteamVR(f"updatepose {i} {joint[0]} {joint[1]} {joint[2]-2} 1 0 0 0 0.05 0.8") 
+                        sendToSteamVR(f"updatepose {i} {joint[0]} {joint[1]} {joint[2] - 2} 1 0 0 0 {camera_latency} 0.8") 
 
     print("inference time:", time.time()-t0)        #print how long it took to detect and calculate everything
 

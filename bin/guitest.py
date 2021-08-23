@@ -8,14 +8,33 @@ def getparams():
         param = pickle.load(open("params.p","rb"))
     except:
         param = {}
+        
+    if "camid" not in param:
         param["camid"] = 'http://192.168.1.103:8080/video'
+    if "imgsize" not in param:
         param["imgsize"] = 800
+    if "neckoffset" not in param:
         param["neckoffset"] = [0.0, -0.2, 0.1]
+    if "prevskel" not in param:
         param["prevskel"] = False
+    if "waithmd" not in param:
         param["waithmd"] = False
+    if "rotateclock" not in param:
         param["rotateclock"] = False
+    if "rotatecclock" not in param: 
         param["rotatecclock"] = False
+    if "rotate" not in param:
         param["rotate"] = None
+    if "camlatency" not in param:
+        param["camlatency"] = 0.05;
+    if "smooth" not in param:
+        param["smooth"] = 0.5;
+    if "feetrot" not in param:
+        param["feetrot"] = False
+    if "calib_scale" not in param:
+        param["calib_scale"] = True
+    if "calib_tilt" not in param:
+        param["calib_tilt"] = True
 
     window = tk.Tk()
 
@@ -33,15 +52,27 @@ def getparams():
     hmdoffsettext = tk.Entry(width = 50)
     hmdoffsettext.pack()
     hmdoffsettext.insert(0," ".join(map(str,param["neckoffset"])))
+    
+    tk.Label(text="Smoothing:", width = 50).pack()
+    smoothingtext = tk.Entry(width = 50)
+    smoothingtext.pack()
+    smoothingtext.insert(0,param["smooth"])
+    
+    tk.Label(text="Camera latency:", width = 50).pack()
+    camlatencytext = tk.Entry(width = 50)
+    camlatencytext.pack()
+    camlatencytext.insert(0,param["camlatency"])
 
     varskel = tk.IntVar(value = param["prevskel"])
     skeleton_check = tk.Checkbutton(text = "Preview whole skeleton", variable = varskel)
     skeleton_check.pack()
 
+    """
     varhmdwait = tk.IntVar(value = param["waithmd"])
     hmdwait_check = tk.Checkbutton(text = "Dont wait for hmd", variable = varhmdwait)
     hmdwait_check.pack()
-
+    """
+    
     varclock = tk.IntVar(value = param["rotateclock"])
     rot_clock_check = tk.Checkbutton(text = "Rotate camera clockwise", variable = varclock)
     rot_clock_check.pack()
@@ -49,6 +80,18 @@ def getparams():
     varcclock = tk.IntVar(value = param["rotatecclock"])
     rot_cclock_check = tk.Checkbutton(text = "Rotate camera counter clockwise", variable = varcclock)
     rot_cclock_check.pack()
+    
+    varfeet = tk.IntVar(value = param["feetrot"])
+    rot_feet_check = tk.Checkbutton(text = "Enable experimental foot rotation", variable = varfeet)
+    rot_feet_check.pack()
+    
+    varscale = tk.IntVar(value = param["calib_scale"])
+    scale_check = tk.Checkbutton(text = "Enable automatic scale calibration", variable = varscale)
+    scale_check.pack()
+    
+    vartilt = tk.IntVar(value = param["calib_tilt"])
+    tilt_check = tk.Checkbutton(text = "Enable automatic tilt calibration", variable = vartilt)
+    tilt_check.pack()
 
     tk.Button(text='Save and continue', command=window.quit).pack()
 
@@ -58,7 +101,7 @@ def getparams():
     maximgsize = int(maximgsize.get())
     hmd_to_neck_offset = [float(val) for val in hmdoffsettext.get().split(" ")]
     preview_skeleton = bool(varskel.get())
-    dont_wait_hmd = bool(varhmdwait.get())
+    dont_wait_hmd = False #bool(varhmdwait.get()) 
     if varclock.get():
         if varcclock.get():
             rotate_image = cv2.ROTATE_180
@@ -68,6 +111,11 @@ def getparams():
         rotate_image = cv2.ROTATE_90_COUNTERCLOCKWISE
     else:
         rotate_image = None
+    camera_latency = float(camlatencytext.get())
+    smoothing = float(smoothingtext.get())
+    feet_rotation = bool(varfeet.get())
+    calib_scale = bool(varscale.get())
+    calib_tilt = bool(vartilt.get())
 
     param = {}
     param["camid"] = cameraid
@@ -78,6 +126,11 @@ def getparams():
     param["rotateclock"] = bool(varclock.get())
     param["rotatecclock"] = bool(varcclock.get())
     param["rotate"] = rotate_image
+    param["smooth"] = smoothing
+    param["camlatency"] = camera_latency
+    param["feetrot"] = feet_rotation
+    param["calib_scale"] = calib_scale
+    param["calib_tilt"] = calib_tilt
 
     pickle.dump(param,open("params.p","wb"))
     

@@ -53,6 +53,50 @@ def draw_pose(frame,pose,size):
         cv2.line(frame,(int(pose[sk[0],1]),int(pose[sk[0],0])),(int(pose[sk[1],1]),int(pose[sk[1],0])),(0,255,0),3)
 
 
+def mediapipeTo3dpose(lms):
+    
+    #convert landmarks returned by mediapipe to skeleton that I use.
+    #lms = results.pose_world_landmarks.landmark
+    
+    pose = np.zeros((23,3))
+
+    pose[0]=[lms[28].x,lms[28].y,lms[28].z]
+    pose[1]=[lms[26].x,lms[26].y,lms[26].z]
+    pose[2]=[lms[24].x,lms[24].y,lms[24].z]
+    pose[3]=[lms[23].x,lms[23].y,lms[23].z]
+    pose[4]=[lms[25].x,lms[25].y,lms[25].z]
+    pose[5]=[lms[27].x,lms[27].y,lms[27].z]
+
+    pose[6]=[0,0,0]
+
+    #some keypoints in mediapipe are missing, so we calculate them as avarage of two keypoints
+    pose[7]=[lms[12].x/2+lms[11].x/2,lms[12].y/2+lms[11].y/2,lms[12].z/2+lms[11].z/2]
+    pose[8]=[lms[10].x/2+lms[9].x/2,lms[10].y/2+lms[9].y/2,lms[10].z/2+lms[9].z/2]
+
+    pose[9]=[lms[0].x,lms[0].y,lms[0].z]
+
+    pose[10]=[lms[15].x,lms[15].y,lms[15].z]
+    pose[11]=[lms[13].x,lms[13].y,lms[13].z]
+    pose[12]=[lms[11].x,lms[11].y,lms[11].z]
+
+    pose[13]=[lms[12].x,lms[12].y,lms[12].z]
+    pose[14]=[lms[14].x,lms[14].y,lms[14].z]
+    pose[15]=[lms[16].x,lms[16].y,lms[16].z]
+
+    pose[16]=[pose[6][0]/2+pose[7][0]/2,pose[6][1]/2+pose[7][1]/2,pose[6][2]/2+pose[7][2]/2]
+
+    #right foot
+    pose[17] = [lms[31].x,lms[31].y,lms[31].z]  #forward
+    pose[18] = [lms[29].x,lms[29].y,lms[29].z]  #back  
+    pose[19] = [lms[25].x,lms[25].y,lms[25].z]  #up
+    
+    #left foot
+    pose[20] = [lms[32].x,lms[32].y,lms[32].z]  #forward
+    pose[21] = [lms[30].x,lms[30].y,lms[30].z]  #back
+    pose[22] = [lms[26].x,lms[26].y,lms[26].z]  #up
+
+    return pose
+
 def keypoints_to_original(scale,center,points):
     scores = points[:,2]
     points -= 0.5
@@ -73,6 +117,66 @@ def normalize_screen_coordinates(X, w, h):
 
     # Normalize so that [0, w] is mapped to [-1, 1], while preserving the aspect ratio
     return X / w * 2 - [1, h / w]
+
+def get_rot_mediapipe(pose3d):
+    hip_left = pose3d[2]
+    hip_right = pose3d[3]
+    hip_up = pose3d[16]
+    
+    foot_l_f = pose3d[20]
+    foot_l_b = pose3d[21]
+    foot_l_u = pose3d[22]
+    
+    foot_r_f = pose3d[17]
+    foot_r_b = pose3d[18]
+    foot_r_u = pose3d[19]
+    
+    # hip
+    
+    x = hip_right - hip_left
+    w = hip_up - hip_left
+    z = np.cross(x, w)
+    y = np.cross(z, x)
+    
+    x = x/np.sqrt(sum(x**2))
+    y = y/np.sqrt(sum(y**2))
+    z = z/np.sqrt(sum(z**2))
+    
+    hip_rot = np.vstack((x, y, z)).T
+    
+    # left foot
+    
+    x = foot_l_f - foot_l_b
+    w = foot_l_u - foot_l_b
+    z = np.cross(x, w)
+    y = np.cross(z, x)
+    
+    x = x/np.sqrt(sum(x**2))
+    y = y/np.sqrt(sum(y**2))
+    z = z/np.sqrt(sum(z**2))
+    
+    l_foot_rot = np.vstack((x, y, z)).T
+    
+    # right foot
+    
+    x = foot_r_f - foot_r_b
+    w = foot_r_u - foot_r_b
+    z = np.cross(x, w)
+    y = np.cross(z, x)
+    
+    x = x/np.sqrt(sum(x**2))
+    y = y/np.sqrt(sum(y**2))
+    z = z/np.sqrt(sum(z**2))
+    
+    r_foot_rot = np.vstack((x, y, z)).T
+    
+    hip_rot = R.from_matrix(hip_rot).as_quat()
+    r_foot_rot = R.from_matrix(r_foot_rot).as_quat()
+    l_foot_rot = R.from_matrix(l_foot_rot).as_quat()
+    
+    return hip_rot, l_foot_rot, r_foot_rot
+
+    
 
 def get_rot(pose3d):
 
