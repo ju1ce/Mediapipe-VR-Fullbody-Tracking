@@ -14,16 +14,22 @@ First, install the driver by running the install_driver.exe from /driver_files.
 Before you start the program, put the camera you will be using into a good spot. The camera HAS to see your entire body, and it helps if it is above you tilted downward!
 
 Then, you should be able to run the program with start_mediapipepose.bat file. A setting window should appear, but you probably only want to change the first setting:
-- IP or ID of camera: If using IP Webcam on android, this will be an IP address. If using a wired webcam, this will be a number. Usualy 0, but sometimes 1 or 2 etc... If 0 doesnt work, try others.
+- IP or ID of camera: If using IP Webcam on android, this will be an IP address. Enter it in the form http://<ip-here>:8080/video. If using a wired webcam, this will be a number. Usualy 0, but sometimes 1 or 2 etc... If 0 doesnt work, try others.
 - Maximum image size: If image is larger than this, it will be downscaled to prevent working with too large images. 800 seems to work fine.
 - Offset of HMD to neck: three values, seperated by spaces. Show offset of your neck to the hmd, which is necesary for further calculations. First value is left/right, second is up/down, third is forward/back. Default is 0.2 meters down, 0.1 meter back and should work well enough.
-- Preview whole skeleton: Instead of spawning just three trackers for legs, the entire skeleton will be spawned and shown 2 meters in front of you. Useful for visualizing how well it works.
-- Dont wait for HMD: Starts detection without waiting for you to put on the HMD. Useful if you already wear it or if you just want to see how it works without VR.
+- Smoothing: The smoothing window in seconds. The higher it is, the smoother will motion be, but with more latency.
+- Camera latency: The latency of your camera. Increase to reduce delay, but at the cost of more shakyness.
+- Preview whole skeleton: Instead of spawning just three trackers for legs, the entire skeleton will be spawned and shown 2 meters in front of you. Useful for visualizing how well it works. Dont use for actual gameplay!
 - Rotate camera clockwise/counter clockwise: Rotate the camera input 90° in one direction, or 180° if both are checked.
+- Enable experimental foot rotation: Foot rotation! May not work at all angles.
+- Enable automatic scale calibration: Disabling this will give you a slider to calibrate your height manualy.
+- Enable automatic tilt calibration: Disabling this will give you a slider to calibrate the camera tilts manualy. 
+  
+When done, press Save and continue to start the program. It will open the camera and do some other initialization steps. Then, stand upright and still with the headset on and in view of the camera. Switch the recalibrate slider to 1 to calibrate your height and camera tilt automaticaly.
 
-When done, press Save and continue to start the program. It will open the camera and do some other initialization steps, then prompt you to put on your headset (if you are already wearing it, just move it downward for a second to detect it). Then, stand upright and still with the headset on and in view of the camera. After 5 seconds, your height will be calibrated and the trackers should appear in VR.
-
-Automatic calibration isnt done yet, so you now have to manualy correct your rotation. The camera feed should appear on your desktop with two sliders. The first slider controlls your rotation around the up axis, and the second one controlls the forward/backward tilt. Use them to align the trackers in vr with your feet.
+Automatic calibration isnt done yet, so you now have to manualy correct your rotation. The camera feed should appear on your desktop with two sliders. The first slider controlls your rotation around the up axis. Use this to align the trackers in vr with your feet.
+  
+If you disabled automatic calibration, use the other sliders to calibrate height and tilt manualy.
 
 When you are done, you can now play vrchat or any other fbt game of your choice!
 
