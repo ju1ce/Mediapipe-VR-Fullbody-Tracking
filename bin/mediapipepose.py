@@ -35,6 +35,7 @@ smoothing = param["smooth"]
 feet_rotation = param["feetrot"]
 calib_scale = param["calib_scale"]
 calib_tilt = param["calib_tilt"]
+calib_rot = param["calib_rot"]
 
 print("Opening camera...")
 
@@ -159,13 +160,14 @@ def change_scale(value):
     posescale = value/50 + 0.5
     
 cv2.namedWindow("out")
-cv2.createTrackbar("rotation_y","out",0,360,rot_change_y)   #Create rotation sliders and assign callback functions
+if not calib_rot:
+    cv2.createTrackbar("rotation_y","out",0,360,rot_change_y)   #Create rotation sliders and assign callback functions
 if not calib_tilt:
     cv2.createTrackbar("rotation_x","out",90,180,rot_change_x)
     cv2.createTrackbar("rotation_z","out",180,360,rot_change_z)
 if not calib_scale:
     cv2.createTrackbar("scale","out",25,100,change_scale)
-if calib_scale or calib_tilt:
+if calib_scale or calib_tilt or calib_rot:
     cv2.createTrackbar("recalib","out",0,1,change_recalibrate)
   
 #Main program loop:
@@ -234,6 +236,8 @@ while(True):
                 if calib_tilt:
                     feet_middle = (pose3d_og[0] + pose3d_og[5])/2
                 
+                    print(feet_middle)
+                
                     ## roll calibaration
                     
                     value = np.arctan2(feet_middle[0],-feet_middle[1])
@@ -252,7 +256,6 @@ while(True):
                      
                     ##tilt calibration
                      
-                    
                     value = np.arctan2(feet_middle[2],-feet_middle[1])
                     
                     print("Precalib x angle: ", value * 57.295779513)
@@ -266,6 +269,25 @@ while(True):
                     value = np.arctan2(feet_middle[2],-feet_middle[1])
                     
                     print("Postcalib x angle: ", value * 57.295779513)
+                    
+                if calib_rot:
+                    feet_rot = pose3d_og[0] - pose3d_og[5]
+                    value = np.arctan2(feet_rot[0],feet_rot[2])
+                    value_hmd = np.arctan2(headsetrot.as_matrix()[0][0],headsetrot.as_matrix()[2][0])
+                    print("Precalib y value: ", value * 57.295779513)
+                    print("hmd y value: ", value_hmd * 57.295779513) 
+                    
+                    value = value - value_hmd
+                    
+                    global_rot_y = R.from_euler('y',-value)
+                    
+                    for j in range(pose3d_og.shape[0]):
+                        pose3d_og[j] = global_rot_y.apply(pose3d_og[j])
+                    
+                    feet_rot = pose3d_og[0] - pose3d_og[5]
+                    value = np.arctan2(feet_rot[0],feet_rot[2])
+                    
+                    print("Postcalib y value: ", value * 57.295779513)
                 
                 if calib_scale:
                     #calculate the height of the skeleton, calculate the height in steamvr as distance of hmd from the ground.

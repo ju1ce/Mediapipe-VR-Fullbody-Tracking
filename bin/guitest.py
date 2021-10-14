@@ -35,6 +35,8 @@ def getparams():
         param["calib_scale"] = True
     if "calib_tilt" not in param:
         param["calib_tilt"] = True
+    if "calib_rot" not in param:
+        param["calib_rot"] = True
 
     window = tk.Tk()
 
@@ -92,6 +94,10 @@ def getparams():
     vartilt = tk.IntVar(value = param["calib_tilt"])
     tilt_check = tk.Checkbutton(text = "Enable automatic tilt calibration", variable = vartilt)
     tilt_check.pack()
+    
+    varrot = tk.IntVar(value = param["calib_rot"])
+    tilt_check = tk.Checkbutton(text = "Enable automatic rotation calibration", variable = varrot)
+    tilt_check.pack()
 
     tk.Button(text='Save and continue', command=window.quit).pack()
 
@@ -116,6 +122,7 @@ def getparams():
     feet_rotation = bool(varfeet.get())
     calib_scale = bool(varscale.get())
     calib_tilt = bool(vartilt.get())
+    calib_rot = bool(varrot.get())
 
     param = {}
     param["camid"] = cameraid
@@ -131,6 +138,7 @@ def getparams():
     param["feetrot"] = feet_rotation
     param["calib_scale"] = calib_scale
     param["calib_tilt"] = calib_tilt
+    param["calib_rot"] = calib_rot
 
     pickle.dump(param,open("params.p","wb"))
     
