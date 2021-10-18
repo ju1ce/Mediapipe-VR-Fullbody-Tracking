@@ -19,19 +19,23 @@ Then, you should be able to run the program with start_mediapipepose.bat file. A
 - Offset of HMD to neck: three values, seperated by spaces. Show offset of your neck to the hmd, which is necesary for further calculations. First value is left/right, second is up/down, third is forward/back. Default is 0.2 meters down, 0.1 meter back and should work well enough.
 - Smoothing: The smoothing window in seconds. The higher it is, the smoother will motion be, but with more latency.
 - Camera latency: The latency of your camera. Increase to reduce delay, but at the cost of more shakyness.
-- Preview whole skeleton: Instead of spawning just three trackers for legs, the entire skeleton will be spawned and shown 2 meters in front of you. Useful for visualizing how well it works. Dont use for actual gameplay!
 - Rotate camera clockwise/counter clockwise: Rotate the camera input 90° in one direction, or 180° if both are checked.
 - Enable experimental foot rotation: Foot rotation! May not work at all angles.
 - Enable automatic scale calibration: Disabling this will give you a slider to calibrate your height manualy.
 - Enable automatic tilt calibration: Disabling this will give you a slider to calibrate the camera tilts manualy. 
+- Enable automatic rotation calibration: Disabling this will give you a slider to calibrate playspace rotation manualy.
   
-When done, press Save and continue to start the program. It will open the camera and do some other initialization steps. Then, stand upright and still with the headset on and in view of the camera. Switch the recalibrate slider to 1 to calibrate your height and camera tilt automaticaly.
-
-Automatic calibration isnt done yet, so you now have to manualy correct your rotation. The camera feed should appear on your desktop with two sliders. The first slider controlls your rotation around the up axis. Use this to align the trackers in vr with your feet.
+There are also some DEV options, that you probably dont want to use:
+  - Preview skeleton in VR: Instead of spawning just three trackers for legs, the entire skeleton will be spawned and shown 2 meters in front of you. Useful for visualizing how well it works. Dont use for actual gameplay!
+  - Spawn trackers for hands: Try to emulate controllers by spawning trackers for your hands. Works pretty bad, so I would recommend against using this.
   
-If you disabled automatic calibration, use the other sliders to calibrate height and tilt manualy.
+When done, press Save and continue to start the program. It will open the camera and do some other initialization steps. Then, stand upright and still with the headset on and in view of the camera. Look straight ahead. Switch the recalibrate slider to 1 to calibrate your height, camera tilt and rotation automaticaly.
+  
+If you disabled automatic calibration, use the other sliders to calibrate height, tilt or rotation manualy.
 
 When you are done, you can now play vrchat or any other fbt game of your choice!
+  
+Your controllers may dissapear or no longer work when you use it the first time. If that happens, restart steamvr.
 
 # MediaPipe version 
 
@@ -45,10 +49,4 @@ The movenet version has now been removed from the repo.
 The project is configured to run from a local python installation in a /python subdirectory, but that kind of broke in the last few commits so probably better to just use global python and run mediapipepose.py directly.
 
 Any needed libraries are listed in install_libraries.bat.
-
-## TODO:
-
-Mediapipe actualy returns feet rotation as well, which I currently ignore. Whether it is accurate enough to actualy use should be tested, however.
-
-While calibrating with sliders is pretty fast and easy, automatic calibration using controller positions should be possible as well.
 
