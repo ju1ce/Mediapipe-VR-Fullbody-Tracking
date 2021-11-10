@@ -24,6 +24,7 @@ Then, you should be able to run the program with start_mediapipepose.bat file. A
 - Enable automatic scale calibration: Disabling this will give you a slider to calibrate your height manualy.
 - Enable automatic tilt calibration: Disabling this will give you a slider to calibrate the camera tilts manualy. 
 - Enable automatic rotation calibration: Disabling this will give you a slider to calibrate playspace rotation manualy.
+- Dont use hip tracker: Disable hip tracking, if you wish to use owotrack for hips instead.
   
 There are also some DEV options, that you probably dont want to use:
   - Preview skeleton in VR: Instead of spawning just three trackers for legs, the entire skeleton will be spawned and shown 2 meters in front of you. Useful for visualizing how well it works. Dont use for actual gameplay!
@@ -36,6 +37,8 @@ If you disabled automatic calibration, use the other sliders to calibrate height
 When you are done, you can now play vrchat or any other fbt game of your choice!
   
 Your controllers may dissapear or no longer work when you use it the first time. If that happens, restart steamvr.
+  
+Automatic scale calibration may not work for some people, mostly on lighthouse tracked headsets. If you notice your feet are far above the ground, disable automatic scale calibration and use the slider instead.
 
 # MediaPipe version 
 
