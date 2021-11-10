@@ -130,13 +130,13 @@ def normalize_screen_coordinates(X, w, h):
 
 def get_rot_hands(pose3d):
 
-    hand_l_f = pose3d[26]
-    hand_l_b = pose3d[27]
-    hand_l_u = pose3d[28]
+    hand_r_f = pose3d[26]
+    hand_r_b = pose3d[27]
+    hand_r_u = pose3d[28]
     
-    hand_r_f = pose3d[23]
-    hand_r_b = pose3d[24]
-    hand_r_u = pose3d[25]
+    hand_l_f = pose3d[23]
+    hand_l_b = pose3d[24]
+    hand_l_u = pose3d[25]
     
     # left hand
     
@@ -149,7 +149,7 @@ def get_rot_hands(pose3d):
     y = y/np.sqrt(sum(y**2))
     z = z/np.sqrt(sum(z**2))
     
-    l_hand_rot = np.vstack((x, y, z)).T
+    l_hand_rot = np.vstack((z, y, -x)).T
     
     # right hand
     
@@ -162,7 +162,7 @@ def get_rot_hands(pose3d):
     y = y/np.sqrt(sum(y**2))
     z = z/np.sqrt(sum(z**2))
     
-    r_hand_rot = np.vstack((x, y, z)).T
+    r_hand_rot = np.vstack((z, y, -x)).T
 
     r_hand_rot = R.from_matrix(r_hand_rot).as_quat()
     l_hand_rot = R.from_matrix(l_hand_rot).as_quat()
