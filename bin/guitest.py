@@ -37,6 +37,10 @@ def getparams():
         param["calib_tilt"] = True
     if "calib_rot" not in param:
         param["calib_rot"] = True
+    if "use_hands" not in param:
+        param["use_hands"] = False
+    if "ignore_hip" not in param:
+        param["ignore_hip"] = False
 
     window = tk.Tk()
 
@@ -65,10 +69,6 @@ def getparams():
     camlatencytext.pack()
     camlatencytext.insert(0,param["camlatency"])
 
-    varskel = tk.IntVar(value = param["prevskel"])
-    skeleton_check = tk.Checkbutton(text = "Preview whole skeleton", variable = varskel)
-    skeleton_check.pack()
-
     """
     varhmdwait = tk.IntVar(value = param["waithmd"])
     hmdwait_check = tk.Checkbutton(text = "Dont wait for hmd", variable = varhmdwait)
@@ -96,8 +96,22 @@ def getparams():
     tilt_check.pack()
     
     varrot = tk.IntVar(value = param["calib_rot"])
-    tilt_check = tk.Checkbutton(text = "Enable automatic rotation calibration", variable = varrot)
-    tilt_check.pack()
+    rot_check = tk.Checkbutton(text = "Enable automatic rotation calibration", variable = varrot)
+    rot_check.pack()
+    
+    varhip = tk.IntVar(value = param["ignore_hip"])
+    hip_check = tk.Checkbutton(text = "Don't use hip tracker", variable = varhip)
+    hip_check.pack()
+    
+    tk.Label(text="-"*50, width = 50).pack()
+    
+    varhand = tk.IntVar(value = param["use_hands"])
+    hand_check = tk.Checkbutton(text = "DEV: spawn trackers for hands", variable = varhand)
+    hand_check.pack()
+    
+    varskel = tk.IntVar(value = param["prevskel"])
+    skeleton_check = tk.Checkbutton(text = "DEV: preview skeleton in VR", variable = varskel)
+    skeleton_check.pack()
 
     tk.Button(text='Save and continue', command=window.quit).pack()
 
@@ -123,6 +137,8 @@ def getparams():
     calib_scale = bool(varscale.get())
     calib_tilt = bool(vartilt.get())
     calib_rot = bool(varrot.get())
+    use_hands = bool(varhand.get())
+    ignore_hip = bool(varhip.get())
 
     param = {}
     param["camid"] = cameraid
@@ -139,7 +155,9 @@ def getparams():
     param["calib_scale"] = calib_scale
     param["calib_tilt"] = calib_tilt
     param["calib_rot"] = calib_rot
-
+    param["use_hands"] = use_hands
+    param["ignore_hip"] = ignore_hip
+    
     pickle.dump(param,open("params.p","wb"))
     
     window.destroy()

@@ -58,7 +58,7 @@ def mediapipeTo3dpose(lms):
     #convert landmarks returned by mediapipe to skeleton that I use.
     #lms = results.pose_world_landmarks.landmark
     
-    pose = np.zeros((23,3))
+    pose = np.zeros((29,3))
 
     pose[0]=[lms[28].x,lms[28].y,lms[28].z]
     pose[1]=[lms[26].x,lms[26].y,lms[26].z]
@@ -94,6 +94,16 @@ def mediapipeTo3dpose(lms):
     pose[20] = [lms[32].x,lms[32].y,lms[32].z]  #forward
     pose[21] = [lms[30].x,lms[30].y,lms[30].z]  #back
     pose[22] = [lms[26].x,lms[26].y,lms[26].z]  #up
+    
+    #right hand
+    pose[23] = [lms[17].x,lms[17].y,lms[17].z]  #forward
+    pose[24] = [lms[15].x,lms[15].y,lms[15].z]  #back
+    pose[25] = [lms[19].x,lms[19].y,lms[19].z]  #up
+    
+    #left hand
+    pose[26] = [lms[18].x,lms[18].y,lms[18].z]  #forward
+    pose[27] = [lms[16].x,lms[16].y,lms[16].z]  #back
+    pose[28] = [lms[20].x,lms[20].y,lms[20].z]  #up
 
     return pose
 
@@ -117,6 +127,47 @@ def normalize_screen_coordinates(X, w, h):
 
     # Normalize so that [0, w] is mapped to [-1, 1], while preserving the aspect ratio
     return X / w * 2 - [1, h / w]
+
+def get_rot_hands(pose3d):
+
+    hand_l_f = pose3d[26]
+    hand_l_b = pose3d[27]
+    hand_l_u = pose3d[28]
+    
+    hand_r_f = pose3d[23]
+    hand_r_b = pose3d[24]
+    hand_r_u = pose3d[25]
+    
+    # left hand
+    
+    x = hand_l_f - hand_l_b
+    w = hand_l_u - hand_l_b
+    z = np.cross(x, w)
+    y = np.cross(z, x)
+    
+    x = x/np.sqrt(sum(x**2))
+    y = y/np.sqrt(sum(y**2))
+    z = z/np.sqrt(sum(z**2))
+    
+    l_hand_rot = np.vstack((x, y, z)).T
+    
+    # right hand
+    
+    x = hand_r_f - hand_r_b
+    w = hand_r_u - hand_r_b
+    z = np.cross(x, w)
+    y = np.cross(z, x)
+    
+    x = x/np.sqrt(sum(x**2))
+    y = y/np.sqrt(sum(y**2))
+    z = z/np.sqrt(sum(z**2))
+    
+    r_hand_rot = np.vstack((x, y, z)).T
+
+    r_hand_rot = R.from_matrix(r_hand_rot).as_quat()
+    l_hand_rot = R.from_matrix(l_hand_rot).as_quat()
+    
+    return l_hand_rot, r_hand_rot
 
 def get_rot_mediapipe(pose3d):
     hip_left = pose3d[2]

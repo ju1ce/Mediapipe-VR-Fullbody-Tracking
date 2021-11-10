@@ -9,7 +9,7 @@ import time
 import threading
 import cv2
 import numpy as np
-from helpers import mediapipeTo3dpose, get_rot_mediapipe,draw_pose, keypoints_to_original, normalize_screen_coordinates, get_rot
+from helpers import mediapipeTo3dpose, get_rot_mediapipe, get_rot_hands, draw_pose, keypoints_to_original, normalize_screen_coordinates, get_rot
 from scipy.spatial.transform import Rotation as R
 from guitest import getparams
 
@@ -36,6 +36,8 @@ feet_rotation = param["feetrot"]
 calib_scale = param["calib_scale"]
 calib_tilt = param["calib_tilt"]
 calib_rot = param["calib_rot"]
+use_hands = param["use_hands"]
+ignore_hip = param["ignore_hip"]
 
 print("Opening camera...")
 
@@ -101,9 +103,20 @@ if "error" in numtrackers:
 numtrackers = int(numtrackers[2])
  
 #games use 3 trackers, but we can also send the entire skeleton if we want to look at how it works
-totaltrackers = 23 if preview_skeleton else 3
+totaltrackers = 23 if preview_skeleton else  3
+if use_hands:
+    totaltrackers = 5
+if ignore_hip:
+    totaltrackers -= 1
 
 roles = ["TrackerRole_Waist", "TrackerRole_RightFoot", "TrackerRole_LeftFoot"]
+
+if ignore_hip and not preview_skeleton:
+    del roles[0]
+
+if(use_hands):
+    roles.append("TrackerRole_Handed")
+    roles.append("TrackerRole_Handed")
 
 for i in range(len(roles),totaltrackers):
     roles.append("None")
@@ -221,6 +234,9 @@ while(True):
             rots = get_rot(pose3d)          #get rotation data of feet and hips from the position-only skeleton data
         else:
             rots = get_rot_mediapipe(pose3d)
+            
+        if use_hands:
+            hand_rots = get_rot_hands(pose3d)
         
         array = sendToSteamVR("getdevicepose 0")        #get hmd data to allign our skeleton to
 
@@ -229,8 +245,7 @@ while(True):
             headsetrot = R.from_quat([float(array[7]),float(array[8]),float(array[9]),float(array[6])])
             
             neckoffset = headsetrot.apply(hmd_to_neck_offset)   #the neck position seems to be the best point to allign to, as its well defined on 
-                                                                #the skeleton (unlike the eyes/nose, which jump around) and can be calculated from hmd.
-            
+                                                                #the skeleton (unlike the eyes/nose, which jump around) and can be calculated from hmd.   
             if recalibrate:
             
                 if calib_tilt:
@@ -301,9 +316,22 @@ while(True):
                 #print(pose3d)
                 offset = pose3d[7] - (headsetpos+neckoffset)    #calculate the position of the skeleton
                 if not preview_skeleton:
-                    for i in [(0,1),(5,2),(6,0)]:
-                        joint = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
-                        sendToSteamVR(f"updatepose {i[1]} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} {camera_latency} 0.8") 
+                    numadded = 3
+                    if not ignore_hip:
+                        for i in [(0,1),(5,2),(6,0)]:
+                            joint = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
+                            sendToSteamVR(f"updatepose {i[1]} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} {camera_latency} 0.8") 
+                    else:
+                        for i in [(0,0),(5,1)]:
+                            joint = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
+                            sendToSteamVR(f"updatepose {i[1]} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} {camera_latency} 0.8") 
+                            numadded = 2
+                    if use_hands:
+                        for i in [(10,0),(15,1)]:
+                            joint = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
+                            sendToSteamVR(f"updatepose {i[1]+numadded} {joint[0]} {joint[1]} {joint[2]} {hand_rots[i[1]][3]} {hand_rots[i[1]][0]} {hand_rots[i[1]][1]} {hand_rots[i[1]][2]} {camera_latency} 0.8") 
+                    
+                    
                 else:
                     for i in range(23):
                         joint = pose3d[i] - offset      #if previewing skeleton, send the position of each keypoint to steamvr without rotation
