@@ -142,7 +142,7 @@ print("Starting pose detector...")
 pose = mp_pose.Pose(                #create our detector. These are default parameters as used in the tutorial. 
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5,
-    model_complexity=1) 
+    model_complexity=1 )
   
 global_rot_y = R.from_euler('y',0,degrees=True)     #default rotations, for 0 degrees around y and x
 global_rot_x = R.from_euler('x',0,degrees=True) 
@@ -322,9 +322,9 @@ while(True):
                             joint = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
                             sendToSteamVR(f"updatepose {i[1]} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} {camera_latency} 0.8") 
                     else:
-                        for i in [(0,0),(5,1)]:
+                        for i in [(0,1),(5,2)]:
                             joint = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
-                            sendToSteamVR(f"updatepose {i[1]} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} {camera_latency} 0.8") 
+                            sendToSteamVR(f"updatepose {i[1]-1} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} {camera_latency} 0.8") 
                             numadded = 2
                     if use_hands:
                         for i in [(10,0),(15,1)]:
