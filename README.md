@@ -40,6 +40,33 @@ Your controllers may dissapear or no longer work when you use it the first time.
   
 Automatic scale calibration may not work for some people, mostly on lighthouse tracked headsets. If you notice your feet are far above the ground, disable automatic scale calibration and use the slider instead.
 
+## Troubleshooting
+  
+**The app crashes with an ImportError: DLL load failed:**
+ 
+This seems to be a problem with some windows "N" versions, which seem to miss some media features: Installing the media feature pack should fix it. Read more about it here: https://stackoverflow.com/a/54321350
+  
+**The tracking is unuseably bad:**
+  
+While the tracking is not perfect even under ideal conditions due to no depth information, there is still a few things you can do to improve it:
+  
+- Make sure that your entire body is seen on the camera, including your head!
+- Make sure there is enough light in the room. and there shouldnt be any light sources behind you, such as any bright windows. Try to get as much lighting as you can from the direction of the camera.
+- Mind what you wear: you need to be in contrast with the background, so dont wear clothes the same color as the background and avoid clothes with patterns.
+- Play with the smoothing and latency parameters a bit. To learn what exactly they do, we have some nice graphs [here](https://github.com/ju1ce/April-Tag-VR-FullBody-Tracker/wiki/Refining-parameters).
+ 
+**All the trackers are 2 meters away from me:**
+  
+The DEV: Preview skeleton in VR option will do this in order to preview the tracking, sort of like a mirror. This makes the tracking unusable for games though, so disable this option. And restart SteamVR after doing so.
+  
+**The trackers are way too high:**
+  
+If the trackers are far off the ground, or even above you, height calibration seems to have failed. Try to disable automatic scale calibration. This should enable a new slider to calibrate your height manualy.
+  
+**Trackers dont allign with my body:**
+  
+For automatic calibration, make sure that you stand straight and look straight ahead or some parts may not be calibrated well enough. If automatic calibration just doesnt seem to work, you can try to disable parts of it: start with scale calibration, then rotation calibration, and finaly tilt calibration. There will be more parameters to calibrate manualy, but it should still work.
+  
 # MediaPipe version 
 
 Thanks to John_ on the ApriltagTrackers discord, who reminded me that MediaPipe pose does in fact have 3d positions as well, the script was modified to use that version. It seems to be faster, pretty accurate, and should be easier to setup. Beside not needing the 3d model, the instructions on how to use are the same.
