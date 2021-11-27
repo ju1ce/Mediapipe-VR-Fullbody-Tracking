@@ -67,6 +67,10 @@ If the trackers are far off the ground, or even above you, height calibration se
   
 For automatic calibration, make sure that you stand straight and look straight ahead or some parts may not be calibrated well enough. If automatic calibration just doesnt seem to work, you can try to disable parts of it: start with scale calibration, then rotation calibration, and finaly tilt calibration. There will be more parameters to calibrate manualy, but it should still work.
   
+## Other tips:
+  
+- A wider FOV can help you have more room to move around, and ensure you can stand closer to the camera. If your camera/phone supports that, make sure to use it!
+
 # MediaPipe version 
 
 Thanks to John_ on the ApriltagTrackers discord, who reminded me that MediaPipe pose does in fact have 3d positions as well, the script was modified to use that version. It seems to be faster, pretty accurate, and should be easier to setup. Beside not needing the 3d model, the instructions on how to use are the same.
