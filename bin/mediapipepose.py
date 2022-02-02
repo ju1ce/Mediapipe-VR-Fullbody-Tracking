@@ -22,7 +22,7 @@ import mediapipe as mp
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
-use_steamvr = False
+use_steamvr = True
 
 print("Reading parameters...")
 
@@ -75,6 +75,8 @@ def change_recalibrate():
     global recalibrate 
     recalibrate = True
 
+global set_rot_y_var, set_rot_x_var, set_rot_z_var, set_scale_var
+
 global_rot_y = R.from_euler('y',0,degrees=True)     #default rotations, for 0 degrees around y and x
 global_rot_x = R.from_euler('x',0,degrees=True) 
 global_rot_z = R.from_euler('z',0,degrees=True) 
@@ -93,7 +95,8 @@ def rot_change_z(value):
 posescale = 1       
 def change_scale(value):
     global posescale
-    posescale = value/50 + 0.5
+    #posescale = value/50 + 0.5
+    posescale = value
 
 camera_thread = threading.Thread(target=camera_thread_fun, daemon=True)
 camera_thread.start()      #start our thread, which starts camera capture
@@ -101,20 +104,23 @@ camera_thread.start()      #start our thread, which starts camera capture
 exit_ready = False
 
 def gui_thread_fun():
-    global smoothing, calib_rot, calib_tilt, change_recalibrate, rot_change_x, rot_change_y, rot_change_z, global_rot_x, global_rot_y, global_rot_z
+    global change_recalibrate, rot_change_x, rot_change_y, rot_change_z, change_scale # functions from main thread to change variables
+    global smoothing, calib_rot, calib_tilt, calib_scale # variables that are changed in this gui thread but read only in main
+    global global_rot_x, global_rot_y, global_rot_z, posescale # variables that are read only here and are changed in main
+    # functions to change above row variables after auto calibration to show on scales vvv
+    global set_rot_y_var, set_rot_x_var, set_rot_z_var, set_scale_var
 
-    def ready2exit():
-        global exit_ready
-        exit_ready = True
-
-    def update_vals(smoothing_val):
-        global smoothing
-        smoothing = smoothing_val
+    #string_var.trace('w', callback)
+    def set_rot_y_var(val):
+        rot_y_var.set(val.as_euler('zyx', degrees=True)[1])
+    def set_rot_z_var(val):
+        rot_z_var.set(val.as_euler('zyx', degrees=True)[0])
+    def set_rot_x_var(val):
+        rot_x_var.set(val.as_euler('zyx', degrees=True)[2])
+    def set_scale_var(val):
+        scale_var.set(val)
 
     window = tk.Tk()
-
-    frame1 = tk.Frame(window)
-    frame1.pack()
 
     def show_hide(value, frames):
         val = value.get()
@@ -126,73 +132,120 @@ def gui_thread_fun():
             
     ### calib rot
 
-    varrot = tk.IntVar(value = calib_rot)
-    rot_check = tk.Checkbutton(frame1, text = "Enable automatic rotation calibration", variable = varrot, command=lambda *args: show_hide(varrot, [rot_y_frame]))
-    rot_check.pack()
-    calib_rot = bool(varrot.get())
+    def change_rot_auto():
+        global calib_rot
+        calib_rot = calib_rot_var.get()
 
+    frame1 = tk.Frame(window)
+    frame1.pack()
+
+    calib_rot_var = tk.BooleanVar(value=calib_rot)
+    rot_check = tk.Checkbutton(frame1, text = "Enable automatic rotation calibration", variable = calib_rot_var, command=change_rot_auto)#, command=lambda *args: show_hide(varrot, [rot_y_frame]))
     rot_y_frame = tk.Frame(frame1)
+
+    rot_check.pack()
     rot_y_frame.pack()
 
-    rot_y = tk.Scale(rot_y_frame, label="Roation y:", from_=0, to=360, command=rot_change_y, orient=tk.HORIZONTAL, 
-                length=800, showvalue=1, tickinterval=50)
+    rot_y_var = tk.DoubleVar(value=global_rot_y.as_euler('zyx', degrees=True)[1])
+    rot_y = tk.Scale(rot_y_frame, label="Roation y:", from_=0, to=360, command=lambda *args: rot_change_y(rot_y_var.get()), orient=tk.HORIZONTAL, 
+                length=400, showvalue=1, tickinterval=60, variable=rot_y_var)
     rot_y.pack(expand=True,fill='both',side='left')
-    rot_y.set(global_rot_y.as_euler('zyx', degrees=True)[1])
 
-    tk.Button(rot_y_frame, text="<", command= lambda *args: rot_y.set(rot_y.get()-1), width=10).pack(expand=True,fill='both',side='left')
-    tk.Button(rot_y_frame, text=">", command= lambda *args: rot_y.set(rot_y.get()+1), width=10).pack(expand=True,fill='both',side='left')
+    tk.Button(rot_y_frame, text="<", command= lambda *args: rot_y_var.set(rot_y_var.get()-1), width=10).pack(expand=True,fill='both',side='left')
+    tk.Button(rot_y_frame, text=">", command= lambda *args: rot_y_var.set(rot_y_var.get()+1), width=10).pack(expand=True,fill='both',side='left')
 
     separator = ttk.Separator(window, orient='horizontal')
     separator.pack(fill='x')
 
     ## calib tilt
 
+    def change_tilt_auto():
+        global calib_tilt
+        calib_tilt = calib_tilt_var.get()
+
     frame2 = tk.Frame(window)
     frame2.pack()
 
-    vartilt = tk.IntVar(value = calib_tilt)
-    tilt_check = tk.Checkbutton(frame2, text = "Enable automatic tilt calibration", variable = vartilt, command=lambda *args: show_hide(vartilt, [rot_z_frame, rot_x_frame]))
+    calib_tilt_var = tk.BooleanVar(value=calib_tilt)
+    tilt_check = tk.Checkbutton(frame2, text="Enable automatic tilt calibration", variable=calib_tilt_var, command=change_tilt_auto)#, command=lambda *args: show_hide(vartilt, [rot_z_frame, rot_x_frame]))
     tilt_check.pack()
-    calib_tilt = bool(vartilt.get())
 
     rot_x_frame = tk.Frame(frame2)
     rot_x_frame.pack()
     rot_z_frame = tk.Frame(frame2)
     rot_z_frame.pack()
 
-    rot_x = tk.Scale(rot_x_frame, label="Roation x:", from_=90, to=180, command=rot_change_x, orient=tk.HORIZONTAL, 
-                length=800, showvalue=1, tickinterval=30)
+    rot_x_var = tk.DoubleVar(value=global_rot_x.as_euler('zyx', degrees=True)[2])
+    rot_x = tk.Scale(rot_x_frame, label="Roation x:", from_=90, to=180, command=lambda *args: rot_change_x(rot_x_var.get()), orient=tk.HORIZONTAL, 
+                length=400, showvalue=1, tickinterval=15, variable=rot_x_var)
     rot_x.pack(expand=True,fill='both',side='left')
-    rot_x.set(global_rot_x.as_euler('zyx', degrees=True)[2])
-    tk.Button(rot_x_frame, text="<", command= lambda *args: rot_x.set(rot_x.get()-1), width=10).pack(expand=True,fill='both',side='left')
-    tk.Button(rot_x_frame, text=">", command= lambda *args: rot_x.set(rot_x.get()+1), width=10).pack(expand=True,fill='both',side='left')
+    tk.Button(rot_x_frame, text="<", command=lambda *args: rot_x_var.set(rot_x_var.get()-1), width=10).pack(expand=True,fill='both',side='left')
+    tk.Button(rot_x_frame, text=">", command=lambda *args: rot_x_var.set(rot_x_var.get()+1), width=10).pack(expand=True,fill='both',side='left')
 
-    rot_z = tk.Scale(rot_z_frame, label="Roation z:", from_=180, to=360, command=rot_change_z, orient=tk.HORIZONTAL, 
-                length=800, showvalue=1, tickinterval=30)
+    rot_z_var = tk.DoubleVar(value=global_rot_z.as_euler('zyx', degrees=True)[0])
+    rot_z = tk.Scale(rot_z_frame, label="Roation z:", from_=180, to=360, command=lambda *args: rot_change_z(rot_z_var.get()), orient=tk.HORIZONTAL, 
+                length=400, showvalue=1, tickinterval=30, variable=rot_z_var)
     rot_z.pack(expand=True,fill='both',side='left')
-    rot_z.set(global_rot_z.as_euler('zyx', degrees=True)[0  ])
-    tk.Button(rot_z_frame, text="<", command= lambda *args: rot_z.set(rot_z.get()-1), width=10).pack(expand=True,fill='both',side='left')
-    tk.Button(rot_z_frame, text=">", command= lambda *args: rot_z.set(rot_z.get()+1), width=10).pack(expand=True,fill='both',side='left')
+    tk.Button(rot_z_frame, text="<", command=lambda *args: rot_z_var.set(rot_z_var.get()-1), width=10).pack(expand=True,fill='both',side='left')
+    tk.Button(rot_z_frame, text=">", command=lambda *args: rot_z_var.set(rot_z_var.get()+1), width=10).pack(expand=True,fill='both',side='left')
     
     separator = ttk.Separator(window, orient='horizontal')
     separator.pack(fill='x')
 
+    ### calib scale
 
-    bottom_frame = tk.Frame(window)
-    bottom_frame.pack()
+    def change_scale_auto():
+        global calib_scale
+        calib_scale = calib_scale_var.get()
+
+    frame3 = tk.Frame(window)
+    frame3.pack()
+
+    calib_scale_var = tk.BooleanVar(value=calib_scale)
+    scale_check = tk.Checkbutton(frame3, text ="Enable automatic scale calibration", variable=calib_scale_var, command=change_scale_auto)#, command=lambda *args: show_hide(varrot, [rot_y_frame]))
+    scale_frame = tk.Frame(frame3)
+
+    scale_check.pack()
+    scale_frame.pack()
+
+    scale_var = tk.DoubleVar(value=posescale)
+    scale = tk.Scale(scale_frame, label="Scale:", from_=0.5, to=2.0, command=lambda *args: change_scale(scale_var.get()), orient=tk.HORIZONTAL, 
+                length=400, showvalue=1, tickinterval=0.1, variable=scale_var, resolution=0.01)
+    scale.pack(expand=True,fill='both',side='left')
+
+    tk.Button(scale_frame, text="<", command=lambda *args: scale_var.set(scale_var.get()-0.01), width=10).pack(expand=True,fill='both',side='left')
+    tk.Button(scale_frame, text=">", command=lambda *args: scale_var.set(scale_var.get()+0.01), width=10).pack(expand=True,fill='both',side='left')
+
+    separator = ttk.Separator(window, orient='horizontal')
+    separator.pack(fill='x')
 
     ## recalibrate
 
-    tk.Button(bottom_frame, text='Recalibrate', command=change_recalibrate).pack()
+    tk.Button(window, text='Recalibrate (automatically recalibrates checked values above)', command=change_recalibrate).pack()
 
-    tk.Label(bottom_frame, text="Smoothing:", width = 50).pack()
-    smoothingtext = tk.Entry(width = 50)
-    smoothingtext.pack()
+    ## smoothing
+
+    def update_vals(smoothing_val):
+        global smoothing
+        smoothing = smoothing_val
+
+    smooth_frame = tk.Frame(window)
+    smooth_frame.pack()
+
+    tk.Label(smooth_frame, text="Smoothing:", width = 20).pack(side='left')
+    smoothingtext = tk.Entry(smooth_frame, width = 10)
+    smoothingtext.pack(side='left')
     smoothingtext.insert(0, smoothing)
 
-    tk.Button(bottom_frame, text='Update', command=lambda *args: update_vals(float(smoothingtext.get()))).pack()
+    tk.Button(smooth_frame, text='Update smoothing val', command=lambda *args: update_vals(float(smoothingtext.get()))).pack(side='left')
 
-    tk.Button(bottom_frame, text='Press to exit', command=ready2exit).pack()
+    ## exit
+
+    def ready2exit():
+        global exit_ready
+        exit_ready = True
+
+    tk.Button(window, text='Press to exit', command=ready2exit).pack()
 
     window.mainloop()
 
@@ -284,17 +337,20 @@ pose = mp_pose.Pose(                #create our detector. These are default para
 
     
 cv2.namedWindow("out")
-if not calib_rot:
-    cv2.createTrackbar("rotation_y","out",0,360,rot_change_y)   #Create rotation sliders and assign callback functions
-if not calib_tilt:
-    cv2.createTrackbar("rotation_x","out",90,180,rot_change_x)
-    cv2.createTrackbar("rotation_z","out",180,360,rot_change_z)
-if not calib_scale:
-    cv2.createTrackbar("scale","out",25,100,change_scale)
-if calib_scale or calib_tilt or calib_rot:
-    cv2.createTrackbar("recalib","out",0,1,change_recalibrate)
+if False:
+    if not calib_rot:
+        cv2.createTrackbar("rotation_y","out",0,360,rot_change_y)   #Create rotation sliders and assign callback functions
+    if not calib_tilt:
+        cv2.createTrackbar("rotation_x","out",90,180,rot_change_x)
+        cv2.createTrackbar("rotation_z","out",180,360,rot_change_z)
+    if not calib_scale:
+        cv2.createTrackbar("scale","out",25,100,change_scale)
+    if calib_scale or calib_tilt or calib_rot:
+        cv2.createTrackbar("recalib","out",0,1,change_recalibrate)
   
 #Main program loop:
+
+
 
 rotation = 0
 
@@ -413,6 +469,9 @@ while(True):
                     value = np.arctan2(feet_middle[2],-feet_middle[1])
                     
                     print("Postcalib x angle: ", value * 57.295779513)
+
+                    set_rot_x_var(global_rot_x)
+                    set_rot_z_var(global_rot_z)
                     
                 if calib_rot:
                     feet_rot = pose3d_og[0] - pose3d_og[5]
@@ -432,12 +491,17 @@ while(True):
                     value = np.arctan2(feet_rot[0],feet_rot[2])
                     
                     print("Postcalib y value: ", value * 57.295779513)
+
+                    set_rot_y_var(global_rot_y)
                 
                 if calib_scale:
                     #calculate the height of the skeleton, calculate the height in steamvr as distance of hmd from the ground.
                     #divide the two to get scale 
                     skelSize = np.max(pose3d_og, axis=0)-np.min(pose3d_og, axis=0)
                     posescale = headsetpos[1]/skelSize[1]
+
+                    set_scale_var(posescale)
+
                 recalibrate = False
                 
             else:
