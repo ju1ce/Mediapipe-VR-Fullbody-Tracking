@@ -292,3 +292,22 @@ def get_rot(pose3d):
     rot_leg_l = R.from_matrix(leg_l_rot).as_quat()
     
     return rot_hip, rot_leg_l, rot_leg_r
+
+
+def sendToSteamVR(text):
+    #Function to send a string to my steamvr driver through a named pipe.
+    #open pipe -> send string -> read string -> close pipe
+    #sometimes, something along that pipeline fails for no reason, which is why the try catch is needed.
+    #returns an array containing the values returned by the driver.
+    try:
+        pipe = open(r'\\.\pipe\ApriltagPipeIn', 'rb+', buffering=0)
+        some_data = str.encode(text)
+        pipe.write(some_data)
+        resp = pipe.read(1024)
+    except:
+        return ["error"]
+    string = resp.decode("utf-8")
+    array = string.split(" ")
+    pipe.close()
+    
+    return array

@@ -14,9 +14,11 @@ import time
 import threading
 import cv2
 import numpy as np
-from helpers import mediapipeTo3dpose, get_rot_mediapipe, get_rot_hands, draw_pose, keypoints_to_original, normalize_screen_coordinates, get_rot
+from helpers import mediapipeTo3dpose, get_rot_mediapipe, get_rot_hands, draw_pose, keypoints_to_original, normalize_screen_coordinates, get_rot, sendToSteamVR
 from scipy.spatial.transform import Rotation as R
-from guitest import getparams
+
+import inference_gui
+import parameters
 
 import mediapipe as mp
 mp_drawing = mp.solutions.drawing_utils
@@ -26,27 +28,7 @@ use_steamvr = True
 
 print("Reading parameters...")
 
-param = getparams()
-
-#PARAMETERS:
-#model =  1          #TODO: add parameter for which model size to use
-maximgsize = param["imgsize"]               #to prevent working with huge images, images that have one axis larger than this value will be downscaled.
-cameraid = param["camid"]                    #to use with an usb or virtual webcam. If 0 doesnt work/opens wrong camera, try numbers 1-5 or so
-#cameraid = "http://192.168.1.102:8080/video"   #to use ip webcam, uncomment this line and change to your ip
-hmd_to_neck_offset = param["neckoffset"]    #offset of your hmd to the base of your neck, to ensure the tracking is stable even if you look around. Default is 20cm down, 10cm back.
-preview_skeleton = param["prevskel"]             #if True, whole skeleton will appear in vr 2 meters in front of you. Good to visualize if everything is working
-dont_wait_hmd = param["waithmd"]                  #dont wait for movement from hmd, start inference immediately.
-rotate_image = param["rotate"] # cv2.ROTATE_90_CLOCKWISE # cv2.ROTATE_90_COUTERCLOCKWISE # cv2.ROTATE_180 # None # if you want, rotate the camera
-camera_latency = param["camlatency"]
-smoothing = param["smooth"]
-feet_rotation = param["feetrot"]
-calib_scale = param["calib_scale"]
-calib_tilt = param["calib_tilt"]
-calib_rot = param["calib_rot"]
-use_hands = param["use_hands"]
-ignore_hip = param["ignore_hip"]
-
-prev_smoothing = smoothing
+params = parameters.Parameters()
 
 print("Opening camera...")
 
@@ -58,8 +40,10 @@ def camera_thread_fun():
     #Mostly used to free the main thread from image decoding overhead and to ensure frames are just skipped if detection is slower than camera fps
     global cameraid, image_from_thread, image_ready
     
-    if len(cameraid) <= 2:
-        cameraid = int(cameraid)
+    if len(params.cameraid) <= 2:
+        cameraid = int(params.cameraid)
+    else:
+        cameraid = params.cameraid
     
     cap = cv2.VideoCapture(cameraid)
     print("Camera opened!")
@@ -70,206 +54,13 @@ def camera_thread_fun():
         
         assert ret, "Camera capture failed! Check the cameraid parameter."
 
-recalibrate = False 
-def change_recalibrate():
-    global recalibrate 
-    recalibrate = True
-
-global set_rot_y_var, set_rot_x_var, set_rot_z_var, set_scale_var
-
-global_rot_y = R.from_euler('y',0,degrees=True)     #default rotations, for 0 degrees around y and x
-global_rot_x = R.from_euler('x',0,degrees=True) 
-global_rot_z = R.from_euler('z',0,degrees=True) 
-def rot_change_y(value):
-    global global_rot_y                                     #callback functions. Whenever the value on sliders are changed, they are called
-    global_rot_y = R.from_euler('y',value,degrees=True)     #and the rotation is updated with the new value.
-    
-def rot_change_x(value):
-    global global_rot_x
-    global_rot_x = R.from_euler('x',value-90,degrees=True) 
-    
-def rot_change_z(value):
-    global global_rot_z
-    global_rot_z = R.from_euler('z',value-180,degrees=True) 
-       
-posescale = 1       
-def change_scale(value):
-    global posescale
-    #posescale = value/50 + 0.5
-    posescale = value
-
 camera_thread = threading.Thread(target=camera_thread_fun, daemon=True)
 camera_thread.start()      #start our thread, which starts camera capture
 
-exit_ready = False
-
-def gui_thread_fun():
-    global change_recalibrate, rot_change_x, rot_change_y, rot_change_z, change_scale # functions from main thread to change variables
-    global smoothing, calib_rot, calib_tilt, calib_scale # variables that are changed in this gui thread but read only in main
-    global global_rot_x, global_rot_y, global_rot_z, posescale # variables that are read only here and are changed in main
-    # functions to change above row variables after auto calibration to show on scales vvv
-    global set_rot_y_var, set_rot_x_var, set_rot_z_var, set_scale_var
-
-    #string_var.trace('w', callback)
-    def set_rot_y_var(val):
-        rot_y_var.set(val.as_euler('zyx', degrees=True)[1])
-    def set_rot_z_var(val):
-        rot_z_var.set(val.as_euler('zyx', degrees=True)[0])
-    def set_rot_x_var(val):
-        rot_x_var.set(val.as_euler('zyx', degrees=True)[2])
-    def set_scale_var(val):
-        scale_var.set(val)
-
-    window = tk.Tk()
-
-    def show_hide(value, frames):
-        val = value.get()
-        for frame in frames:
-            if not val:
-                frame.pack() #.grid(row=1)
-            else:
-                frame.pack_forget() # .grid_forget()
-            
-    ### calib rot
-
-    def change_rot_auto():
-        global calib_rot
-        calib_rot = calib_rot_var.get()
-
-    frame1 = tk.Frame(window)
-    frame1.pack()
-
-    calib_rot_var = tk.BooleanVar(value=calib_rot)
-    rot_check = tk.Checkbutton(frame1, text = "Enable automatic rotation calibration", variable = calib_rot_var, command=change_rot_auto)#, command=lambda *args: show_hide(varrot, [rot_y_frame]))
-    rot_y_frame = tk.Frame(frame1)
-
-    rot_check.pack()
-    rot_y_frame.pack()
-
-    rot_y_var = tk.DoubleVar(value=global_rot_y.as_euler('zyx', degrees=True)[1])
-    rot_y = tk.Scale(rot_y_frame, label="Roation y:", from_=0, to=360, command=lambda *args: rot_change_y(rot_y_var.get()), orient=tk.HORIZONTAL, 
-                length=400, showvalue=1, tickinterval=60, variable=rot_y_var)
-    rot_y.pack(expand=True,fill='both',side='left')
-
-    tk.Button(rot_y_frame, text="<", command= lambda *args: rot_y_var.set(rot_y_var.get()-1), width=10).pack(expand=True,fill='both',side='left')
-    tk.Button(rot_y_frame, text=">", command= lambda *args: rot_y_var.set(rot_y_var.get()+1), width=10).pack(expand=True,fill='both',side='left')
-
-    separator = ttk.Separator(window, orient='horizontal')
-    separator.pack(fill='x')
-
-    ## calib tilt
-
-    def change_tilt_auto():
-        global calib_tilt
-        calib_tilt = calib_tilt_var.get()
-
-    frame2 = tk.Frame(window)
-    frame2.pack()
-
-    calib_tilt_var = tk.BooleanVar(value=calib_tilt)
-    tilt_check = tk.Checkbutton(frame2, text="Enable automatic tilt calibration", variable=calib_tilt_var, command=change_tilt_auto)#, command=lambda *args: show_hide(vartilt, [rot_z_frame, rot_x_frame]))
-    tilt_check.pack()
-
-    rot_x_frame = tk.Frame(frame2)
-    rot_x_frame.pack()
-    rot_z_frame = tk.Frame(frame2)
-    rot_z_frame.pack()
-
-    rot_x_var = tk.DoubleVar(value=global_rot_x.as_euler('zyx', degrees=True)[2])
-    rot_x = tk.Scale(rot_x_frame, label="Roation x:", from_=90, to=180, command=lambda *args: rot_change_x(rot_x_var.get()), orient=tk.HORIZONTAL, 
-                length=400, showvalue=1, tickinterval=15, variable=rot_x_var)
-    rot_x.pack(expand=True,fill='both',side='left')
-    tk.Button(rot_x_frame, text="<", command=lambda *args: rot_x_var.set(rot_x_var.get()-1), width=10).pack(expand=True,fill='both',side='left')
-    tk.Button(rot_x_frame, text=">", command=lambda *args: rot_x_var.set(rot_x_var.get()+1), width=10).pack(expand=True,fill='both',side='left')
-
-    rot_z_var = tk.DoubleVar(value=global_rot_z.as_euler('zyx', degrees=True)[0])
-    rot_z = tk.Scale(rot_z_frame, label="Roation z:", from_=180, to=360, command=lambda *args: rot_change_z(rot_z_var.get()), orient=tk.HORIZONTAL, 
-                length=400, showvalue=1, tickinterval=30, variable=rot_z_var)
-    rot_z.pack(expand=True,fill='both',side='left')
-    tk.Button(rot_z_frame, text="<", command=lambda *args: rot_z_var.set(rot_z_var.get()-1), width=10).pack(expand=True,fill='both',side='left')
-    tk.Button(rot_z_frame, text=">", command=lambda *args: rot_z_var.set(rot_z_var.get()+1), width=10).pack(expand=True,fill='both',side='left')
-    
-    separator = ttk.Separator(window, orient='horizontal')
-    separator.pack(fill='x')
-
-    ### calib scale
-
-    def change_scale_auto():
-        global calib_scale
-        calib_scale = calib_scale_var.get()
-
-    frame3 = tk.Frame(window)
-    frame3.pack()
-
-    calib_scale_var = tk.BooleanVar(value=calib_scale)
-    scale_check = tk.Checkbutton(frame3, text ="Enable automatic scale calibration", variable=calib_scale_var, command=change_scale_auto)#, command=lambda *args: show_hide(varrot, [rot_y_frame]))
-    scale_frame = tk.Frame(frame3)
-
-    scale_check.pack()
-    scale_frame.pack()
-
-    scale_var = tk.DoubleVar(value=posescale)
-    scale = tk.Scale(scale_frame, label="Scale:", from_=0.5, to=2.0, command=lambda *args: change_scale(scale_var.get()), orient=tk.HORIZONTAL, 
-                length=400, showvalue=1, tickinterval=0.1, variable=scale_var, resolution=0.01)
-    scale.pack(expand=True,fill='both',side='left')
-
-    tk.Button(scale_frame, text="<", command=lambda *args: scale_var.set(scale_var.get()-0.01), width=10).pack(expand=True,fill='both',side='left')
-    tk.Button(scale_frame, text=">", command=lambda *args: scale_var.set(scale_var.get()+0.01), width=10).pack(expand=True,fill='both',side='left')
-
-    separator = ttk.Separator(window, orient='horizontal')
-    separator.pack(fill='x')
-
-    ## recalibrate
-
-    tk.Button(window, text='Recalibrate (automatically recalibrates checked values above)', command=change_recalibrate).pack()
-
-    ## smoothing
-
-    def update_vals(smoothing_val):
-        global smoothing
-        smoothing = smoothing_val
-
-    smooth_frame = tk.Frame(window)
-    smooth_frame.pack()
-
-    tk.Label(smooth_frame, text="Smoothing:", width = 20).pack(side='left')
-    smoothingtext = tk.Entry(smooth_frame, width = 10)
-    smoothingtext.pack(side='left')
-    smoothingtext.insert(0, smoothing)
-
-    tk.Button(smooth_frame, text='Update smoothing val', command=lambda *args: update_vals(float(smoothingtext.get()))).pack(side='left')
-
-    ## exit
-
-    def ready2exit():
-        global exit_ready
-        exit_ready = True
-
-    tk.Button(window, text='Press to exit', command=ready2exit).pack()
-
-    window.mainloop()
-
-gui_thread = threading.Thread(target=gui_thread_fun, daemon=True)
+gui_thread = threading.Thread(target=inference_gui.make_inference_gui, args=(params,), daemon=True)
 gui_thread.start()
 
-def sendToSteamVR(text):
-    #Function to send a string to my steamvr driver through a named pipe.
-    #open pipe -> send string -> read string -> close pipe
-    #sometimes, something along that pipeline fails for no reason, which is why the try catch is needed.
-    #returns an array containing the values returned by the driver.
-    try:
-        pipe = open(r'\\.\pipe\ApriltagPipeIn', 'rb+', buffering=0)
-        some_data = str.encode(text)
-        pipe.write(some_data)
-        resp = pipe.read(1024)
-    except:
-        return ["error"]
-    string = resp.decode("utf-8")
-    array = string.split(" ")
-    pipe.close()
-    
-    return array
- 
+
 if use_steamvr:
     print("Connecting to SteamVR")
     
@@ -292,18 +83,18 @@ if use_steamvr:
     numtrackers = int(numtrackers[2])
  
 #games use 3 trackers, but we can also send the entire skeleton if we want to look at how it works
-totaltrackers = 23 if preview_skeleton else  3
-if use_hands:
+totaltrackers = 23 if params.preview_skeleton else  3
+if params.use_hands:
     totaltrackers = 5
-if ignore_hip:
+if params.ignore_hip:
     totaltrackers -= 1
 
 roles = ["TrackerRole_Waist", "TrackerRole_RightFoot", "TrackerRole_LeftFoot"]
 
-if ignore_hip and not preview_skeleton:
+if params.ignore_hip and not params.preview_skeleton:
     del roles[0]
 
-if(use_hands):
+if params.use_hands:
     roles.append("TrackerRole_Handed")
     roles.append("TrackerRole_Handed")
 
@@ -320,9 +111,9 @@ if use_steamvr:
             time.sleep(0.2)
         time.sleep(0.2)
     
-    resp = sendToSteamVR(f"settings 50 {smoothing}")
+    resp = sendToSteamVR(f"settings 50 {params.smoothing}")
     while "error" in resp:
-        resp = sendToSteamVR(f"settings 50 {smoothing}")
+        resp = sendToSteamVR(f"settings 50 {params.smoothing}")
         print(resp)
         time.sleep(1)
 
@@ -335,41 +126,28 @@ pose = mp_pose.Pose(                #create our detector. These are default para
     model_complexity=1) 
   
 
-    
 cv2.namedWindow("out")
-if False:
-    if not calib_rot:
-        cv2.createTrackbar("rotation_y","out",0,360,rot_change_y)   #Create rotation sliders and assign callback functions
-    if not calib_tilt:
-        cv2.createTrackbar("rotation_x","out",90,180,rot_change_x)
-        cv2.createTrackbar("rotation_z","out",180,360,rot_change_z)
-    if not calib_scale:
-        cv2.createTrackbar("scale","out",25,100,change_scale)
-    if calib_scale or calib_tilt or calib_rot:
-        cv2.createTrackbar("recalib","out",0,1,change_recalibrate)
-  
+
 #Main program loop:
-
-
 
 rotation = 0
 
 i = 0
 while(True):
     # Capture frame-by-frame
-    if exit_ready:
+    if params.exit_ready:
         cv2.destroyAllWindows()
         print("Exiting... You can close the window after 10 seconds.")
         exit(0)
         
-    if prev_smoothing != smoothing:
-        print(f"Changed smoothing value from {prev_smoothing} to {smoothing}")
-        prev_smoothing = smoothing
+    if params.prev_smoothing != params.smoothing:
+        print(f"Changed smoothing value from {params.prev_smoothing} to {params.smoothing}")
+        params.prev_smoothing = params.smoothing
 
         if use_steamvr:
-            resp = sendToSteamVR(f"settings 50 {smoothing}")
+            resp = sendToSteamVR(f"settings 50 {params.smoothing}")
             while "error" in resp:
-                resp = sendToSteamVR(f"settings 50 {smoothing}")
+                resp = sendToSteamVR(f"settings 50 {params.smoothing}")
                 print(resp)
                 time.sleep(1)
     
@@ -380,11 +158,11 @@ while(True):
     img = image_from_thread.copy() #some may say I need a mutex here. I say this works fine.
     image_ready = False         
     
-    if rotate_image is not None:        #if set, rotate the image
-        img = cv2.rotate(img, rotate_image)
+    if params.rotate_image is not None:        #if set, rotate the image
+        img = cv2.rotate(img, params.rotate_image)
 
-    if max(img.shape) > maximgsize:         #if set, ensure image does not exceed the given size.
-        ratio = max(img.shape)/maximgsize
+    if max(img.shape) > params.maximgsize:         #if set, ensure image does not exceed the given size.
+        ratio = max(img.shape)/params.maximgsize
         img = cv2.resize(img,(int(img.shape[1]/ratio),int(img.shape[0]/ratio)))
     
     img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
@@ -406,18 +184,19 @@ while(True):
         pose3d[:,1] = -pose3d[:,1]
 
         pose3d_og = pose3d.copy()
+        params.pose3d_og = pose3d_og
         
         for j in range(pose3d.shape[0]):        #apply the rotations from the sliders
-            pose3d[j] = global_rot_z.apply(pose3d[j])
-            pose3d[j] = global_rot_x.apply(pose3d[j])
-            pose3d[j] = global_rot_y.apply(pose3d[j])
+            pose3d[j] = params.global_rot_z.apply(pose3d[j])
+            pose3d[j] = params.global_rot_x.apply(pose3d[j])
+            pose3d[j] = params.global_rot_y.apply(pose3d[j])
         
-        if not feet_rotation:
+        if not params.feet_rotation:
             rots = get_rot(pose3d)          #get rotation data of feet and hips from the position-only skeleton data
         else:
             rots = get_rot_mediapipe(pose3d)
             
-        if use_hands:
+        if params.use_hands:
             hand_rots = get_rot_hands(pose3d)
         
         if use_steamvr:
@@ -429,113 +208,44 @@ while(True):
             headsetpos = [float(array[3]),float(array[4]),float(array[5])]
             headsetrot = R.from_quat([float(array[7]),float(array[8]),float(array[9]),float(array[6])])
             
-            neckoffset = headsetrot.apply(hmd_to_neck_offset)   #the neck position seems to be the best point to allign to, as its well defined on 
+            neckoffset = headsetrot.apply(params.hmd_to_neck_offset)   #the neck position seems to be the best point to allign to, as its well defined on 
                                                                 #the skeleton (unlike the eyes/nose, which jump around) and can be calculated from hmd.   
-            if recalibrate:
-            
-                if calib_tilt:
-                    feet_middle = (pose3d_og[0] + pose3d_og[5])/2
-                
-                    print(feet_middle)
-                
-                    ## roll calibaration
-                    
-                    value = np.arctan2(feet_middle[0],-feet_middle[1])
-                    
-                    print("Precalib z angle: ", value * 57.295779513)
-                    
-                    global_rot_z = R.from_euler('z',-value)
-                    
-                    for j in range(pose3d_og.shape[0]):
-                        pose3d_og[j] = global_rot_z.apply(pose3d_og[j])
-                        
-                    feet_middle = (pose3d_og[0] + pose3d_og[5])/2
-                    value = np.arctan2(feet_middle[0],-feet_middle[1])
-                    
-                    print("Postcalib z angle: ", value * 57.295779513)
-                        
-                    ##tilt calibration
-                        
-                    value = np.arctan2(feet_middle[2],-feet_middle[1])
-                    
-                    print("Precalib x angle: ", value * 57.295779513)
-                    
-                    global_rot_x = R.from_euler('x',value)
-                
-                    for j in range(pose3d_og.shape[0]):
-                        pose3d_og[j] = global_rot_x.apply(pose3d_og[j])
-                        
-                    feet_middle = (pose3d_og[0] + pose3d_og[5])/2
-                    value = np.arctan2(feet_middle[2],-feet_middle[1])
-                    
-                    print("Postcalib x angle: ", value * 57.295779513)
 
-                    set_rot_x_var(global_rot_x)
-                    set_rot_z_var(global_rot_z)
-                    
-                if calib_rot:
-                    feet_rot = pose3d_og[0] - pose3d_og[5]
-                    value = np.arctan2(feet_rot[0],feet_rot[2])
-                    value_hmd = np.arctan2(headsetrot.as_matrix()[0][0],headsetrot.as_matrix()[2][0])
-                    print("Precalib y value: ", value * 57.295779513)
-                    print("hmd y value: ", value_hmd * 57.295779513) 
-                    
-                    value = value - value_hmd
-                    
-                    global_rot_y = R.from_euler('y',-value)
-                    
-                    for j in range(pose3d_og.shape[0]):
-                        pose3d_og[j] = global_rot_y.apply(pose3d_og[j])
-                    
-                    feet_rot = pose3d_og[0] - pose3d_og[5]
-                    value = np.arctan2(feet_rot[0],feet_rot[2])
-                    
-                    print("Postcalib y value: ", value * 57.295779513)
-
-                    set_rot_y_var(global_rot_y)
-                
-                if calib_scale:
-                    #calculate the height of the skeleton, calculate the height in steamvr as distance of hmd from the ground.
-                    #divide the two to get scale 
-                    skelSize = np.max(pose3d_og, axis=0)-np.min(pose3d_og, axis=0)
-                    posescale = headsetpos[1]/skelSize[1]
-
-                    set_scale_var(posescale)
-
-                recalibrate = False
+            if params.recalibrate:
+                print("frame to recalibrate")
                 
             else:
-                    pose3d = pose3d * posescale     #rescale skeleton to calibrated height
-                    #print(pose3d)
-                    offset = pose3d[7] - (headsetpos+neckoffset)    #calculate the position of the skeleton
-                    if not preview_skeleton:
-                        numadded = 3
-                        if not ignore_hip:
-                            for i in [(0,1),(5,2),(6,0)]:
-                                joint = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
-                                if use_steamvr:
-                                    sendToSteamVR(f"updatepose {i[1]} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} {camera_latency} 0.8") 
-                        else:
-                            for i in [(0,0),(5,1)]:
-                                joint = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
-                                if use_steamvr:
-                                    sendToSteamVR(f"updatepose {i[1]} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} {camera_latency} 0.8") 
-                                numadded = 2
-                        if use_hands:
-                            for i in [(10,0),(15,1)]:
-                                joint = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
-                                if use_steamvr:
-                                    sendToSteamVR(f"updatepose {i[1]+numadded} {joint[0]} {joint[1]} {joint[2]} {hand_rots[i[1]][3]} {hand_rots[i[1]][0]} {hand_rots[i[1]][1]} {hand_rots[i[1]][2]} {camera_latency} 0.8") 
-                        
-                        
-                    else:
-                        for i in range(23):
-                            joint = pose3d[i] - offset      #if previewing skeleton, send the position of each keypoint to steamvr without rotation
+                pose3d = pose3d * params.posescale     #rescale skeleton to calibrated height
+                #print(pose3d)
+                offset = pose3d[7] - (headsetpos+neckoffset)    #calculate the position of the skeleton
+                if not params.preview_skeleton:
+                    numadded = 3
+                    if not params.ignore_hip:
+                        for i in [(0,1),(5,2),(6,0)]:
+                            joint = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
                             if use_steamvr:
-                                sendToSteamVR(f"updatepose {i} {joint[0]} {joint[1]} {joint[2] - 2} 1 0 0 0 {camera_latency} 0.8") 
+                                sendToSteamVR(f"updatepose {i[1]} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} {params.camera_latency} 0.8") 
+                    else:
+                        for i in [(0,0),(5,1)]:
+                            joint = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
+                            if use_steamvr:
+                                sendToSteamVR(f"updatepose {i[1]} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} {params.camera_latency} 0.8") 
+                            numadded = 2
+                    if params.use_hands:
+                        for i in [(10,0),(15,1)]:
+                            joint = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
+                            if use_steamvr:
+                                sendToSteamVR(f"updatepose {i[1]+numadded} {joint[0]} {joint[1]} {joint[2]} {hand_rots[i[1]][3]} {hand_rots[i[1]][0]} {hand_rots[i[1]][1]} {hand_rots[i[1]][2]} {params.camera_latency} 0.8") 
+                    
+                    
+                else:
+                    for i in range(23):
+                        joint = pose3d[i] - offset      #if previewing skeleton, send the position of each keypoint to steamvr without rotation
+                        if use_steamvr:
+                            sendToSteamVR(f"updatepose {i} {joint[0]} {joint[1]} {joint[2] - 2} 1 0 0 0 {params.camera_latency} 0.8") 
 
-    print(f"Inference time: {time.time()-t0}\nSmoothing value: {smoothing}\n")        #print how long it took to detect and calculate everything
-
+    #print(f"Inference time: {time.time()-t0}\nSmoothing value: {smoothing}\n")        #print how long it took to detect and calculate everything
+    inference_time = time.time() - t0
 
     #cv2.imshow("out",image)
     #cv2.waitKey(0)
@@ -543,6 +253,7 @@ while(True):
     img = cv2.cvtColor(img,cv2.COLOR_RGB2BGR)       #convert back to bgr and draw the pose
     mp_drawing.draw_landmarks(
         img, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+    img = cv2.putText(img, f"{inference_time:1.3f}", (10,30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 1, cv2.LINE_AA)
     
     cv2.imshow("out",img)           #show image, exit program if we press esc
     if cv2.waitKey(1) == 27:

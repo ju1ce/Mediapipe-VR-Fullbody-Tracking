@@ -26,9 +26,9 @@ def getparams():
     if "rotate" not in param:
         param["rotate"] = None
     if "camlatency" not in param:
-        param["camlatency"] = 0.05;
+        param["camlatency"] = 0.05
     if "smooth" not in param:
-        param["smooth"] = 0.5;
+        param["smooth"] = 0.5
     if "feetrot" not in param:
         param["feetrot"] = False
     if "calib_scale" not in param:
@@ -165,4 +165,4 @@ def getparams():
     return param
 
 if __name__ == "__main__":
-    print(getparams());
+    print(getparams())
