@@ -110,7 +110,7 @@ def getparams():
     hand_check.pack()
     
     varskel = tk.IntVar(value = param["prevskel"])
-    skeleton_check = tk.Checkbutton(text = "DEV: preview skeleton in VR", variable = varskel)
+    skeleton_check = tk.Checkbutton(text = "Spawn trackers in front of you for preview purposes. DO NOT USE IN GAMES.", variable = varskel)
     skeleton_check.pack()
 
     tk.Button(text='Save and continue', command=window.quit).pack()
