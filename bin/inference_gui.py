@@ -3,7 +3,7 @@ from tkinter import ttk
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 import helpers
-#import mediapipepose as mep
+
 
 class InferenceWindow(tk.Frame):
     def __init__(self, root, params, *args, **kwargs):
@@ -24,8 +24,8 @@ class InferenceWindow(tk.Frame):
 
         # calibrate tilt
         self.calib_tilt_var = tk.BooleanVar(value=self.params.calib_tilt)
-        self.rot_x_var = tk.DoubleVar(value=self.params.global_rot_x.as_euler('zyx', degrees=True)[2])
-        self.rot_z_var = tk.DoubleVar(value=self.params.global_rot_z.as_euler('zyx', degrees=True)[0])
+        self.rot_x_var = tk.DoubleVar(value=self.params.global_rot_x.as_euler('zyx', degrees=True)[2]+90)
+        self.rot_z_var = tk.DoubleVar(value=self.params.global_rot_z.as_euler('zyx', degrees=True)[0]+180)
 
         frame2 = tk.Frame(self.root)
         frame2.pack()
@@ -51,6 +51,11 @@ class InferenceWindow(tk.Frame):
         frame4 = tk.Frame(self.root)
         frame4.pack()
         self.change_smooothing_frame(frame4)
+
+        # smoothing
+        frame4_1 = tk.Frame(self.root)
+        frame4_1.pack()
+        self.change_cam_lat_frame(frame4_1)
 
         # rotate image 
         frame5 = tk.Frame(self.root)
@@ -169,8 +174,18 @@ class InferenceWindow(tk.Frame):
         tk.Button(frame, text='Update smoothing value', command=lambda *args: self.params.change_smoothing(float(smoothingtext.get()))).pack(side='left')
 
 
+    def change_cam_lat_frame(self, frame):
+
+        tk.Label(frame, text="Camera latency:", width = 20).pack(side='left')
+        lat = tk.Entry(frame, width = 10)
+        lat.pack(side='left')
+        lat.insert(0, self.params.camera_latency)
+
+        tk.Button(frame, text='Update camera latency', command=lambda *args: self.params.change_camera_latency(float(lat.get()))).pack(side='left')
+
+
     def change_image_rotation_frame(self, frame):
-        rot_img_var = tk.IntVar(value=0)#rotate_image)
+        rot_img_var = tk.IntVar(value=self.params.img_rot_dict_rev[self.params.rotate_image])
         tk.Label(frame, text="Image rotation clockwise:", width = 20).grid(row=0, column=0)
         tk.Radiobutton(frame, text="0", variable = rot_img_var, value = 0).grid(row=0, column=1)
         tk.Radiobutton(frame, text="90",  variable = rot_img_var, value = 1).grid(row=0, column=2)

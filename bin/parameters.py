@@ -1,7 +1,7 @@
 from guitest import getparams
 from scipy.spatial.transform import Rotation as R
 import cv2
-import tkinter as tk
+import json
 
 class Parameters():
     def __init__(self) -> None:
@@ -15,15 +15,16 @@ class Parameters():
         self.hmd_to_neck_offset = param["neckoffset"]    #offset of your hmd to the base of your neck, to ensure the tracking is stable even if you look around. Default is 20cm down, 10cm back.
         self.preview_skeleton = param["prevskel"]             #if True, whole skeleton will appear in vr 2 meters in front of you. Good to visualize if everything is working
         self.dont_wait_hmd = param["waithmd"]                  #dont wait for movement from hmd, start inference immediately.
-        self.rotate_image = param["rotate"] # cv2.ROTATE_90_CLOCKWISE # cv2.ROTATE_90_COUTERCLOCKWISE # cv2.ROTATE_180 # None # if you want, rotate the camera
+        self.rotate_image = 0 # cv2.ROTATE_90_CLOCKWISE # cv2.ROTATE_90_COUTERCLOCKWISE # cv2.ROTATE_180 # None # if you want, rotate the camera
         self.camera_latency = param["camlatency"]
         self.smoothing = param["smooth"]
         self.feet_rotation = param["feetrot"]
-        self.calib_scale = param["calib_scale"]
-        self.calib_tilt = param["calib_tilt"]
-        self.calib_rot = param["calib_rot"]
         self.use_hands = param["use_hands"]
         self.ignore_hip = param["ignore_hip"]
+
+        self.calib_rot = True
+        self.calib_tilt = True
+        self.calib_scale = True
 
         self.prev_smoothing = self.smoothing
 
@@ -38,12 +39,9 @@ class Parameters():
         self.exit_ready = False
 
         self.img_rot_dict = {0: None, 1: cv2.ROTATE_90_CLOCKWISE, 2: cv2.ROTATE_180, 3: cv2.ROTATE_90_COUNTERCLOCKWISE}
+        self.img_rot_dict_rev = {None: 0, cv2.ROTATE_90_CLOCKWISE: 1, cv2.ROTATE_180: 2, cv2.ROTATE_90_COUNTERCLOCKWISE: 3}
 
-        # trace variables
-        
-        #self.root = tk.Tk()
-        #self.rot_y_var = tk.DoubleVar(value=self.global_rot_y.as_euler('zyx', degrees=True)[1])
-
+        self.load_params()
 
     
     def change_recalibrate(self):
@@ -80,8 +78,47 @@ class Parameters():
         self.smoothing = val
 
 
+    def change_camera_latency(self, val):
+        print(f"Changed camera latency to {val}")
+        self.camera_latency = val
+
+
     def ready2exit(self):
         self.exit_ready = True
+
+
+    def save_params(self):
+        param = {}
+        param["rotate"] = self.img_rot_dict_rev[self.rotate_image] 
+        param["smooth"] = self.smoothing
+
+        param["camlatency"] = self.camera_latency
+
+        param["roty"] = self.global_rot_y.as_euler('zyx', degrees=True)[1]
+        param["rotx"] = self.global_rot_x.as_euler('zyx', degrees=True)[2]
+        param["rotz"] = self.global_rot_z.as_euler('zyx', degrees=True)[0] 
+        param["scale"] = self.posescale
+
+        with open("saved_params.json", "w") as f:
+            json.dump(param, f)
+
+    def load_params(self):
+
+        try:
+            with open("saved_params.json", "r") as f:
+                param = json.load(f)
+
+            self.rotate_image = self.img_rot_dict[param["rotate"]]
+            self.smoothing = param["smooth"]
+            self.camera_latency = param["camlatency"]
+
+            self.global_rot_y = R.from_euler('y',param["roty"],degrees=True)
+            self.global_rot_x = R.from_euler('x',param["rotx"],degrees=True)
+            self.global_rot_z = R.from_euler('z',param["rotz"],degrees=True)
+            self.posescale = param["scale"]
+        except:
+            print("Save file not found, will be created after you exit the program.")
+ 
 
 
 if __name__ == "__main__":

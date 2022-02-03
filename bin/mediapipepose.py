@@ -7,9 +7,6 @@ from turtle import width
 
 sys.path.append(os.getcwd())    #embedable python doesnt find local modules without this line
 
-import tkinter as tk
-from tkinter import ttk
-
 import time
 import threading
 import cv2
@@ -24,7 +21,7 @@ import mediapipe as mp
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
-use_steamvr = True
+use_steamvr = False
 
 print("Reading parameters...")
 
@@ -126,19 +123,25 @@ pose = mp_pose.Pose(                #create our detector. These are default para
     model_complexity=1) 
   
 
+def shutdown():
+    # first save parameters 
+    print("Saving parameters...")
+    params.save_params()
+
+    cv2.destroyAllWindows()
+    print("Exiting... You can close the window after 10 seconds.")
+    exit(0)
+
 cv2.namedWindow("out")
 
 #Main program loop:
 
 rotation = 0
-
 i = 0
 while(True):
     # Capture frame-by-frame
     if params.exit_ready:
-        cv2.destroyAllWindows()
-        print("Exiting... You can close the window after 10 seconds.")
-        exit(0)
+        shutdown()
         
     if params.prev_smoothing != params.smoothing:
         print(f"Changed smoothing value from {params.prev_smoothing} to {params.smoothing}")
@@ -246,9 +249,6 @@ while(True):
 
     #print(f"Inference time: {time.time()-t0}\nSmoothing value: {smoothing}\n")        #print how long it took to detect and calculate everything
     inference_time = time.time() - t0
-
-    #cv2.imshow("out",image)
-    #cv2.waitKey(0)
     
     img = cv2.cvtColor(img,cv2.COLOR_RGB2BGR)       #convert back to bgr and draw the pose
     mp_drawing.draw_landmarks(
@@ -257,8 +257,9 @@ while(True):
     
     cv2.imshow("out",img)           #show image, exit program if we press esc
     if cv2.waitKey(1) == 27:
-        print("Exiting... You can close the window after 10 seconds.")
-        exit(0)
+        #print("Exiting... You can close the window after 10 seconds.")
+        #exit(0)
+        shutdown()
 
 
 
