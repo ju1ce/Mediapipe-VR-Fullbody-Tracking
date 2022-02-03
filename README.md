@@ -24,6 +24,7 @@ Then, you should be able to run the program with start_mediapipepose.bat file. A
 - Enable automatic scale calibration: Disabling this will give you a slider to calibrate your height manualy.
 - Enable automatic tilt calibration: Disabling this will give you a slider to calibrate the camera tilts manualy. 
 - Enable automatic rotation calibration: Disabling this will give you a slider to calibrate playspace rotation manualy.
+- Dont use hip tracker: Disable hip tracking, if you wish to use owotrack for hips instead.
   
 There are also some DEV options, that you probably dont want to use:
   - Preview skeleton in VR: Instead of spawning just three trackers for legs, the entire skeleton will be spawned and shown 2 meters in front of you. Useful for visualizing how well it works. Dont use for actual gameplay!
@@ -36,6 +37,39 @@ If you disabled automatic calibration, use the other sliders to calibrate height
 When you are done, you can now play vrchat or any other fbt game of your choice!
   
 Your controllers may dissapear or no longer work when you use it the first time. If that happens, restart steamvr.
+  
+Automatic scale calibration may not work for some people, mostly on lighthouse tracked headsets. If you notice your feet are far above the ground, disable automatic scale calibration and use the slider instead.
+
+## Troubleshooting
+  
+**The app crashes with an ImportError: DLL load failed:**
+ 
+This seems to be a problem with some windows "N" versions, which seem to miss some media features: Installing the media feature pack should fix it. Read more about it here: https://stackoverflow.com/a/54321350
+  
+**The tracking is unuseably bad:**
+  
+While the tracking is not perfect even under ideal conditions due to no depth information, there is still a few things you can do to improve it:
+  
+- Make sure that your entire body is seen on the camera, including your head!
+- Make sure there is enough light in the room. and there shouldnt be any light sources behind you, such as any bright windows. Try to get as much lighting as you can from the direction of the camera.
+- Mind what you wear: you need to be in contrast with the background, so dont wear clothes the same color as the background and avoid clothes with patterns.
+- Play with the smoothing and latency parameters a bit. To learn what exactly they do, we have some nice graphs [here](https://github.com/ju1ce/April-Tag-VR-FullBody-Tracker/wiki/Refining-parameters).
+ 
+**All the trackers are 2 meters away from me:**
+  
+The DEV: Preview skeleton in VR option will do this in order to preview the tracking, sort of like a mirror. This makes the tracking unusable for games though, so disable this option. And restart SteamVR after doing so.
+  
+**The trackers are way too high:**
+  
+If the trackers are far off the ground, or even above you, height calibration seems to have failed. Try to disable automatic scale calibration. This should enable a new slider to calibrate your height manualy.
+  
+**Trackers dont allign with my body:**
+  
+For automatic calibration, make sure that you stand straight and look straight ahead or some parts may not be calibrated well enough. If automatic calibration just doesnt seem to work, you can try to disable parts of it: start with scale calibration, then rotation calibration, and finaly tilt calibration. There will be more parameters to calibrate manualy, but it should still work.
+  
+## Other tips:
+  
+- A wider FOV can help you have more room to move around, and ensure you can stand closer to the camera. If your camera/phone supports that, make sure to use it!
 
 # MediaPipe version 
 
