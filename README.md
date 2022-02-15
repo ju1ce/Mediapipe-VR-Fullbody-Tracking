@@ -67,6 +67,12 @@ If the trackers are far off the ground, or even above you, height calibration se
   
 For automatic calibration, make sure that you stand straight and look straight ahead or some parts may not be calibrated well enough. If automatic calibration just doesnt seem to work, you can try to disable parts of it: start with scale calibration, then rotation calibration, and finaly tilt calibration. There will be more parameters to calibrate manualy, but it should still work.
   
+**Trackers don't show up in VR, status window says "Move to wake up trackers"**
+  
+This is usualy caused when smoothing window is too low, or camera latency is too high. Set them back to default values (smoothing window 0.5, camera latency 0.05) and adjust the values in smaller steps to find out the optimal parameters! Usualy, smoothing window can go down to 0.3, and camera latency should usualy not be over 0.1.
+
+Explanation: The smoother needs at least 5 previous frames to work. If it has less than that, it will fail to estimate pose, causing the described problem. Example: with a window of 0.5 and proccesing time per frame of 0.05, the smoother will have on avarage 10 frames to work with, which will work fine. With a window of 0.2, it will have on avarage 4 frames to work with, which is not enough, and trackers will not wake up.
+  
 ## Other tips:
   
 - A wider FOV can help you have more room to move around, and ensure you can stand closer to the camera. If your camera/phone supports that, make sure to use it!
