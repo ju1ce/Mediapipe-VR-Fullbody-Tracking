@@ -73,6 +73,10 @@ This is usualy caused when smoothing window is too low, or camera latency is too
 
 Explanation: The smoother needs at least 5 previous frames to work. If it has less than that, it will fail to estimate pose, causing the described problem. Example: with a window of 0.5 and proccesing time per frame of 0.05, the smoother will have on avarage 10 frames to work with, which will work fine. With a window of 0.2, it will have on avarage 4 frames to work with, which is not enough, and trackers will not wake up.
   
+**In vrchat, both legs stick together**
+  
+First, make sure that the trackers align with the avatar properly. If they don't, you may need to recalibrate. On some avatars, you may also have to stand with your legs further apart to prevent this.
+  
 ## Other tips:
   
 - A wider FOV can help you have more room to move around, and ensure you can stand closer to the camera. If your camera/phone supports that, make sure to use it!
