@@ -42,7 +42,23 @@ def camera_thread_fun():
     else:
         cameraid = params.cameraid
     
-    cap = cv2.VideoCapture(cameraid)
+    if params.camera_settings:
+        cap = cv2.VideoCapture(cameraid, 700)
+        cap.set(cv2.CAP_PROP_SETTINGS,1)
+    else:
+        cap = cv2.VideoCapture(cameraid)    
+   
+    #codec = 0x47504A4D
+    #cap.set(cv2.CAP_PROP_FOURCC, codec)
+    
+    print( params.camera_height)
+    
+    if params.camera_height != 0:
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(params.camera_height))
+        
+    if params.camera_width != 0:
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(params.camera_width))
+        
     print("Camera opened!")
     while True:
         ret, image_from_thread = cap.read()    
@@ -108,9 +124,9 @@ if use_steamvr:
             time.sleep(0.2)
         time.sleep(0.2)
     
-    resp = sendToSteamVR(f"settings 50 {params.smoothing}")
+    resp = sendToSteamVR(f"settings 50 {params.smoothing} {params.additional_smoothing}")
     while "error" in resp:
-        resp = sendToSteamVR(f"settings 50 {params.smoothing}")
+        resp = sendToSteamVR(f"settings 50 {params.smoothing} {params.additional_smoothing}")
         print(resp)
         time.sleep(1)
 
@@ -138,19 +154,26 @@ cv2.namedWindow("out")
 
 rotation = 0
 i = 0
+
+prev_smoothing = params.smoothing
+prev_add_smoothing = params.additional_smoothing
+
 while(True):
     # Capture frame-by-frame
     if params.exit_ready:
         shutdown()
         
-    if params.prev_smoothing != params.smoothing:
-        print(f"Changed smoothing value from {params.prev_smoothing} to {params.smoothing}")
-        params.prev_smoothing = params.smoothing
+    if prev_smoothing != params.smoothing or prev_add_smoothing != params.additional_smoothing:
+        print(f"Changed smoothing value from {prev_smoothing} to {params.smoothing}")
+        print(f"Changed additional smoothing from {prev_add_smoothing} to {params.additional_smoothing}")
+        
+        prev_smoothing = params.smoothing
+        prev_add_smoothing = params.additional_smoothing
 
         if use_steamvr:
-            resp = sendToSteamVR(f"settings 50 {params.smoothing}")
+            resp = sendToSteamVR(f"settings 50 {params.smoothing} {params.additional_smoothing}")
             while "error" in resp:
-                resp = sendToSteamVR(f"settings 50 {params.smoothing}")
+                resp = sendToSteamVR(f"settings 50 {params.smoothing} {params.additional_smoothing}")
                 print(resp)
                 time.sleep(1)
     
@@ -167,6 +190,11 @@ while(True):
     if max(img.shape) > params.maximgsize:         #if set, ensure image does not exceed the given size.
         ratio = max(img.shape)/params.maximgsize
         img = cv2.resize(img,(int(img.shape[1]/ratio),int(img.shape[0]/ratio)))
+    
+    if params.paused:
+        cv2.imshow("out",img)
+        cv2.waitKey(1)
+        continue
     
     img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
 

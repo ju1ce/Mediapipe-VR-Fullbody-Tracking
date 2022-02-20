@@ -1,4 +1,4 @@
-from guitest import getparams
+from init_gui import getparams
 from scipy.spatial.transform import Rotation as R
 import cv2
 import json
@@ -16,11 +16,18 @@ class Parameters():
         self.preview_skeleton = param["prevskel"]             #if True, whole skeleton will appear in vr 2 meters in front of you. Good to visualize if everything is working
         self.dont_wait_hmd = param["waithmd"]                  #dont wait for movement from hmd, start inference immediately.
         self.rotate_image = 0 # cv2.ROTATE_90_CLOCKWISE # cv2.ROTATE_90_COUTERCLOCKWISE # cv2.ROTATE_180 # None # if you want, rotate the camera
-        self.camera_latency = param["camlatency"]
-        self.smoothing = param["smooth"]
+        #self.camera_latency = param["camlatency"]
+        #self.smoothing = param["smooth"]
+        self.camera_latency = 0.1
+        self.smoothing = 0.5
+        self.additional_smoothing = 0
         self.feet_rotation = param["feetrot"]
         self.use_hands = param["use_hands"]
         self.ignore_hip = param["ignore_hip"]
+        
+        self.camera_settings = param["camera_settings"]
+        self.camera_width = param["camera_width"]
+        self.camera_height = param["camera_height"]
 
         self.calib_rot = True
         self.calib_tilt = True
@@ -40,6 +47,8 @@ class Parameters():
 
         self.img_rot_dict = {0: None, 1: cv2.ROTATE_90_CLOCKWISE, 2: cv2.ROTATE_180, 3: cv2.ROTATE_90_COUNTERCLOCKWISE}
         self.img_rot_dict_rev = {None: 0, cv2.ROTATE_90_CLOCKWISE: 1, cv2.ROTATE_180: 2, cv2.ROTATE_90_COUNTERCLOCKWISE: 3}
+
+        self.paused = False
 
         self.load_params()
 
@@ -76,7 +85,10 @@ class Parameters():
     def change_smoothing(self, val):
         print(f"Changed smoothing value to {val}")
         self.smoothing = val
-
+        
+    def change_additional_smoothing(self, val):
+        print(f"Changed additional smoothing value to {val}")
+        self.additional_smoothing = val
 
     def change_camera_latency(self, val):
         print(f"Changed camera latency to {val}")
@@ -93,6 +105,7 @@ class Parameters():
         param["smooth"] = self.smoothing
 
         param["camlatency"] = self.camera_latency
+        param["addsmooth"] = self.additional_smoothing
 
         param["roty"] = self.global_rot_y.as_euler('zyx', degrees=True)[1]
         param["rotx"] = self.global_rot_x.as_euler('zyx', degrees=True)[2]
@@ -111,6 +124,7 @@ class Parameters():
             self.rotate_image = self.img_rot_dict[param["rotate"]]
             self.smoothing = param["smooth"]
             self.camera_latency = param["camlatency"]
+            self.additional_smoothing = param["addsmooth"]
 
             self.global_rot_y = R.from_euler('y',param["roty"],degrees=True)
             self.global_rot_x = R.from_euler('x',param["rotx"],degrees=True)

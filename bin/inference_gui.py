@@ -4,6 +4,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 import helpers
 
+use_steamvr = False
 
 class InferenceWindow(tk.Frame):
     def __init__(self, root, params, *args, **kwargs):
@@ -46,11 +47,20 @@ class InferenceWindow(tk.Frame):
         # recalibrate
         tk.Button(self.root, text='Recalibrate (automatically recalibrates checked values above)', 
                     command=self.autocalibrate).pack()
+                    
+        # pause tracking
+        tk.Button(self.root, text='Pause/Unpause tracking', 
+                    command=self.pause_tracking).pack()
 
         # smoothing
         frame4 = tk.Frame(self.root)
         frame4.pack()
         self.change_smooothing_frame(frame4)
+
+        # smoothing
+        frame4_2 = tk.Frame(self.root)
+        frame4_2.pack()
+        self.change_add_smoothing_frame(frame4_2)
 
         # smoothing
         frame4_1 = tk.Frame(self.root)
@@ -76,11 +86,11 @@ class InferenceWindow(tk.Frame):
 
 
     def set_rot_z_var(self):
-        self.rot_z_var.set(self.params.global_rot_z.as_euler('zyx', degrees=True)[0])
+        self.rot_z_var.set(self.params.global_rot_z.as_euler('zyx', degrees=True)[0]+180)
 
 
     def set_rot_x_var(self):
-        self.rot_x_var.set(self.params.global_rot_x.as_euler('zyx', degrees=True)[2])
+        self.rot_x_var.set(self.params.global_rot_x.as_euler('zyx', degrees=True)[2]+90)
         #self.root.after(0, self.set_rot_x_var)
 
 
@@ -166,12 +176,13 @@ class InferenceWindow(tk.Frame):
 
     def change_smooothing_frame(self, frame):
         
-        tk.Label(frame, text="Smoothing:", width = 20).pack(side='left')
+        tk.Label(frame, text="Smoothing window:", width = 20).pack(side='left')
         smoothingtext = tk.Entry(frame, width = 10)
         smoothingtext.pack(side='left')
         smoothingtext.insert(0, self.params.smoothing)
 
-        tk.Button(frame, text='Update smoothing value', command=lambda *args: self.params.change_smoothing(float(smoothingtext.get()))).pack(side='left')
+        tk.Button(frame, text='Update', command=lambda *args: self.params.change_smoothing(float(smoothingtext.get()))).pack(side='left')
+        tk.Button(frame, text='Disable', command=lambda *args: self.params.change_smoothing(0.0)).pack(side='left')
 
 
     def change_cam_lat_frame(self, frame):
@@ -181,7 +192,17 @@ class InferenceWindow(tk.Frame):
         lat.pack(side='left')
         lat.insert(0, self.params.camera_latency)
 
-        tk.Button(frame, text='Update camera latency', command=lambda *args: self.params.change_camera_latency(float(lat.get()))).pack(side='left')
+        tk.Button(frame, text='Update', command=lambda *args: self.params.change_camera_latency(float(lat.get()))).pack(side='left')
+        
+    def change_add_smoothing_frame(self, frame):
+
+        tk.Label(frame, text="Additional smoothing:", width = 20).pack(side='left')
+        lat = tk.Entry(frame, width = 10)
+        lat.pack(side='left')
+        lat.insert(0, self.params.additional_smoothing)
+
+        tk.Button(frame, text='Update', command=lambda *args: self.params.change_additional_smoothing(float(lat.get()))).pack(side='left')
+        tk.Button(frame, text='Disable', command=lambda *args: self.params.change_additional_smoothing(0.0)).pack(side='left')
 
 
     def change_image_rotation_frame(self, frame):
@@ -197,22 +218,23 @@ class InferenceWindow(tk.Frame):
 
     def autocalibrate(self):
 
-        for _ in range(10):
-            array = helpers.sendToSteamVR("getdevicepose 0")        #get hmd data to allign our skeleton to
+        if use_steamvr:
+            for _ in range(10):
+                array = helpers.sendToSteamVR("getdevicepose 0")        #get hmd data to allign our skeleton to
+
+                if "error" in array:    #continue to next iteration if there is an error
+                    continue
+                else:
+                    break
 
             if "error" in array:    #continue to next iteration if there is an error
-                continue
-            else:
-                break
+                print("Failed to contact SteamVR after 10 tries... Try to autocalibrate again.")
+                return
 
-        if "error" in array:    #continue to next iteration if there is an error
-            print("Failed to contact SteamVR after 10 tries... Try to autocalibrate again.")
-            return
-
-        headsetpos = [float(array[3]),float(array[4]),float(array[5])]
-        headsetrot = R.from_quat([float(array[7]),float(array[8]),float(array[9]),float(array[6])])
-        
-        neckoffset = headsetrot.apply(self.params.hmd_to_neck_offset)   #the neck position seems to be the best point to allign to, as its well defined on 
+            headsetpos = [float(array[3]),float(array[4]),float(array[5])]
+            headsetrot = R.from_quat([float(array[7]),float(array[8]),float(array[9]),float(array[6])])
+            
+            neckoffset = headsetrot.apply(self.params.hmd_to_neck_offset)   #the neck position seems to be the best point to allign to, as its well defined on 
                                                             #the skeleton (unlike the eyes/nose, which jump around) and can be calculated from hmd.   
 
         if self.params.calib_tilt:
@@ -254,7 +276,7 @@ class InferenceWindow(tk.Frame):
             
             print("Postcalib x angle: ", value * 57.295779513)
 
-        if self.params.calib_rot:
+        if use_steamvr and self.params.calib_rot:
             feet_rot = self.params.pose3d_og[0] - self.params.pose3d_og[5]
             value = np.arctan2(feet_rot[0],feet_rot[2])
             value_hmd = np.arctan2(headsetrot.as_matrix()[0][0],headsetrot.as_matrix()[2][0])
@@ -274,7 +296,7 @@ class InferenceWindow(tk.Frame):
             
             print("Postcalib y value: ", value * 57.295779513)
 
-        if self.params.calib_scale:
+        if use_steamvr and self.params.calib_scale:
             #calculate the height of the skeleton, calculate the height in steamvr as distance of hmd from the ground.
             #divide the two to get scale 
             skelSize = np.max(self.params.pose3d_og, axis=0)-np.min(self.params.pose3d_og, axis=0)
@@ -288,6 +310,9 @@ class InferenceWindow(tk.Frame):
     def put_separator(self): 
         separator = ttk.Separator(self.root, orient='horizontal')
         separator.pack(fill='x')
+        
+    def pause_tracking(self):
+        self.params.paused = not self.params.paused
 
 
 def make_inference_gui(_params):
