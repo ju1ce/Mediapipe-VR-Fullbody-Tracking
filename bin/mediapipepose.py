@@ -51,8 +51,6 @@ def camera_thread_fun():
     #codec = 0x47504A4D
     #cap.set(cv2.CAP_PROP_FOURCC, codec)
     
-    print( params.camera_height)
-    
     if params.camera_height != 0:
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(params.camera_height))
         
