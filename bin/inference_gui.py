@@ -4,7 +4,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 import helpers
 
-use_steamvr = False
+use_steamvr = True
 
 class InferenceWindow(tk.Frame):
     def __init__(self, root, params, *args, **kwargs):
@@ -81,7 +81,14 @@ class InferenceWindow(tk.Frame):
 
 
     def set_rot_y_var(self):
-        self.rot_y_var.set(self.params.global_rot_y.as_euler('zyx', degrees=True)[1])
+        angle = -(180+self.params.global_rot_y.as_euler('zyx', degrees=True)[1])
+        #print("calculated angle from rot is:",angle)
+        if angle >= 360:
+            angle -= 360
+        elif angle < 0:
+            angle += 360
+        #print("calculated angle final is:",angle)
+        self.rot_y_var.set(angle)
         #self.root.after(0, self.set_rot_y_var)
 
 
@@ -135,7 +142,7 @@ class InferenceWindow(tk.Frame):
         rot_z_frame = tk.Frame(frame)
         rot_z_frame.pack()
 
-        rot_x = tk.Scale(rot_x_frame, label="Roation x:", from_=90, to=180, #command=lambda *args: self.params.rot_change_x(self.rot_x_var.get()), 
+        rot_x = tk.Scale(rot_x_frame, label="Roation x:", from_=0, to=180, #command=lambda *args: self.params.rot_change_x(self.rot_x_var.get()), 
                         orient=tk.HORIZONTAL, length=400, showvalue=1, tickinterval=15, variable=self.rot_x_var)
         rot_x.pack(expand=True,fill='both',side='left')
         self.rot_x_var.trace_add('write', callback=lambda var, index, mode: self.params.rot_change_x(self.rot_x_var.get()))
@@ -143,7 +150,7 @@ class InferenceWindow(tk.Frame):
         tk.Button(rot_x_frame, text="<", command=lambda *args: self.rot_x_var.set(self.rot_x_var.get()-1), width=10).pack(expand=True,fill='both',side='left')
         tk.Button(rot_x_frame, text=">", command=lambda *args: self.rot_x_var.set(self.rot_x_var.get()+1), width=10).pack(expand=True,fill='both',side='left')
         
-        rot_z = tk.Scale(rot_z_frame, label="Roation z:", from_=180, to=360, #command=lambda *args: self.params.rot_change_z(self.rot_z_var.get()), 
+        rot_z = tk.Scale(rot_z_frame, label="Roation z:", from_=90, to=270, #command=lambda *args: self.params.rot_change_z(self.rot_z_var.get()), 
                         orient=tk.HORIZONTAL, length=400, showvalue=1, tickinterval=30, variable=self.rot_z_var)
         rot_z.pack(expand=True,fill='both',side='left')
         self.rot_z_var.trace_add('write', callback=lambda var, index, mode: self.params.rot_change_z(self.rot_z_var.get()))
@@ -281,11 +288,20 @@ class InferenceWindow(tk.Frame):
             value = np.arctan2(feet_rot[0],feet_rot[2])
             value_hmd = np.arctan2(headsetrot.as_matrix()[0][0],headsetrot.as_matrix()[2][0])
             print("Precalib y value: ", value * 57.295779513)
-            print("hmd y value: ", value_hmd * 57.295779513) 
+            print("hmd y value: ", value_hmd * 57.295779513)  
             
             value = value - value_hmd
             
-            self.params.global_rot_y = R.from_euler('y',-value)
+            value = -value
+   
+            print("Calibrate to value:", value * 57.295779513) 
+            
+            self.params.global_rot_y = R.from_euler('y',value)
+            
+
+            angle = self.params.global_rot_y.as_euler('zyx', degrees=True)
+            print("angle from rot = ", -(180+angle[1]))
+            
             self.set_rot_y_var()
 
             for j in range(self.params.pose3d_og.shape[0]):
