@@ -15,6 +15,7 @@ class InferenceWindow(tk.Frame):
 
         # calibrate rotation
         self.calib_rot_var = tk.BooleanVar(value=self.params.calib_rot)
+        self.calib_flip_var = tk.BooleanVar(value=self.params.flip)
         self.rot_y_var = tk.DoubleVar(value=self.params.global_rot_y.as_euler('zyx', degrees=True)[1])
 
         frame1 = tk.Frame(self.root)
@@ -82,6 +83,10 @@ class InferenceWindow(tk.Frame):
 
     def set_rot_y_var(self):
         angle = -(180+self.params.global_rot_y.as_euler('zyx', degrees=True)[1])
+        
+        if not self.params.flip:
+            angle += 180
+        
         #print("calculated angle from rot is:",angle)
         if angle >= 360:
             angle -= 360
@@ -108,16 +113,22 @@ class InferenceWindow(tk.Frame):
     def change_rot_auto(self):
         self.params.calib_rot = self.calib_rot_var.get()
         print(f"Mark rotation to{'' if self.params.calib_rot else ' NOT'} be automatically calibrated")
+        
+    def change_rot_flip(self):
+        self.params.flip = self.calib_flip_var.get()
+        print("changed flip to: ", self.params.flip)
 
 
     def calibrate_rotation_frame(self, frame):
         rot_check = tk.Checkbutton(frame, text = "Enable automatic rotation calibration", variable = self.calib_rot_var, command=self.change_rot_auto)#, command=lambda *args: show_hide(varrot, [rot_y_frame]))
+        flip_check = tk.Checkbutton(frame, text = "Flip calibration", variable = self.calib_flip_var, command=self.change_rot_flip)
         rot_y_frame = tk.Frame(frame)
 
         rot_check.pack()
+        flip_check.pack()
         rot_y_frame.pack()
 
-        rot_y = tk.Scale(rot_y_frame, label="Roation y:", from_=0, to=360, #command=lambda *args: self.params.rot_change_y(self.rot_y_var.get()), 
+        rot_y = tk.Scale(rot_y_frame, label="Roation y:", from_=-40, to=400, #command=lambda *args: self.params.rot_change_y(self.rot_y_var.get()), 
                         orient=tk.HORIZONTAL, length=400, showvalue=1, tickinterval=60, variable=self.rot_y_var)
         rot_y.pack(expand=True,fill='both',side='left')
 
@@ -300,7 +311,7 @@ class InferenceWindow(tk.Frame):
             
 
             angle = self.params.global_rot_y.as_euler('zyx', degrees=True)
-            print("angle from rot = ", -(180+angle[1]))
+            print("angle from rot = ", -(180+angle[1]), "whole:",angle)
             
             self.set_rot_y_var()
 

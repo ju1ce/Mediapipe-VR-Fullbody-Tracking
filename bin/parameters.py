@@ -49,6 +49,8 @@ class Parameters():
         self.img_rot_dict_rev = {None: 0, cv2.ROTATE_90_CLOCKWISE: 1, cv2.ROTATE_180: 2, cv2.ROTATE_90_COUNTERCLOCKWISE: 3}
 
         self.paused = False
+        
+        self.flip = False
 
         self.load_params()
 
@@ -111,6 +113,12 @@ class Parameters():
         param["rotx"] = self.global_rot_x.as_euler('zyx', degrees=True)[2]
         param["rotz"] = self.global_rot_z.as_euler('zyx', degrees=True)[0] 
         param["scale"] = self.posescale
+        
+        param["calibrot"] = self.calib_rot
+        param["calibtilt"] = self.calib_tilt
+        param["calibscale"] = self.calib_scale
+        
+        param["flip"] = self.flip
 
         with open("saved_params.json", "w") as f:
             json.dump(param, f)
@@ -130,6 +138,12 @@ class Parameters():
             self.global_rot_x = R.from_euler('x',param["rotx"],degrees=True)
             self.global_rot_z = R.from_euler('z',param["rotz"],degrees=True)
             self.posescale = param["scale"]
+            
+            self.calib_rot = param["calibrot"]
+            self.calib_tilt = param["calibtilt"]
+            self.calib_scale = param["calibscale"]
+            
+            self.flip = param["flip"]
         except:
             print("Save file not found, will be created after you exit the program.")
  
