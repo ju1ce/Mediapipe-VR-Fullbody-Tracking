@@ -52,6 +52,17 @@ class InferenceWindow(tk.Frame):
         # pause tracking
         tk.Button(self.root, text='Pause/Unpause tracking', 
                     command=self.pause_tracking).pack()
+                  
+        
+        
+        frame_profile = tk.Frame(self.root)
+        frame_profile.pack()
+        tk.Label(frame_profile, text=" ", width = 20).pack(side='left')
+        tk.Label(frame_profile, text="Profile 1", width = 10).pack(side='left')
+        tk.Label(frame_profile, text=" ", width = 5).pack(side='left')
+        tk.Label(frame_profile, text="Profile 2", width = 10).pack(side='left')
+        tk.Label(frame_profile, text=" ", width = 5).pack(side='left')
+        tk.Label(frame_profile, text=" ", width = 5).pack(side='left')
 
         # smoothing
         frame4 = tk.Frame(self.root)
@@ -195,11 +206,18 @@ class InferenceWindow(tk.Frame):
     def change_smooothing_frame(self, frame):
         
         tk.Label(frame, text="Smoothing window:", width = 20).pack(side='left')
-        smoothingtext = tk.Entry(frame, width = 10)
-        smoothingtext.pack(side='left')
-        smoothingtext.insert(0, self.params.smoothing)
+        smoothingtext1 = tk.Entry(frame, width = 10)
+        smoothingtext1.pack(side='left')
+        smoothingtext1.insert(0, self.params.smoothing_1)
 
-        tk.Button(frame, text='Update', command=lambda *args: self.params.change_smoothing(float(smoothingtext.get()))).pack(side='left')
+        tk.Button(frame, text='Update', command=lambda *args: self.params.change_smoothing(float(smoothingtext1.get()),1)).pack(side='left')
+        
+        smoothingtext2 = tk.Entry(frame, width = 10)
+        smoothingtext2.pack(side='left')
+        smoothingtext2.insert(0, self.params.smoothing_2)
+
+        tk.Button(frame, text='Update', command=lambda *args: self.params.change_smoothing(float(smoothingtext2.get()),2)).pack(side='left')
+        
         tk.Button(frame, text='Disable', command=lambda *args: self.params.change_smoothing(0.0)).pack(side='left')
 
 
@@ -215,11 +233,18 @@ class InferenceWindow(tk.Frame):
     def change_add_smoothing_frame(self, frame):
 
         tk.Label(frame, text="Additional smoothing:", width = 20).pack(side='left')
-        lat = tk.Entry(frame, width = 10)
-        lat.pack(side='left')
-        lat.insert(0, self.params.additional_smoothing)
+        lat1 = tk.Entry(frame, width = 10)
+        lat1.pack(side='left')
+        lat1.insert(0, self.params.additional_smoothing_1)
 
-        tk.Button(frame, text='Update', command=lambda *args: self.params.change_additional_smoothing(float(lat.get()))).pack(side='left')
+        tk.Button(frame, text='Update', command=lambda *args: self.params.change_additional_smoothing(float(lat1.get()),1)).pack(side='left')
+        
+        lat2 = tk.Entry(frame, width = 10)
+        lat2.pack(side='left')
+        lat2.insert(0, self.params.additional_smoothing_2)
+
+        tk.Button(frame, text='Update', command=lambda *args: self.params.change_additional_smoothing(float(lat2.get()),2)).pack(side='left')
+        
         tk.Button(frame, text='Disable', command=lambda *args: self.params.change_additional_smoothing(0.0)).pack(side='left')
 
 

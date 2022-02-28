@@ -19,8 +19,10 @@ class Parameters():
         #self.camera_latency = param["camlatency"]
         #self.smoothing = param["smooth"]
         self.camera_latency = 0.1
-        self.smoothing = 0.5
-        self.additional_smoothing = 0
+        self.smoothing_1 = 0.5
+        self.additional_smoothing_1 = 0
+        self.smoothing_2 = 0.5
+        self.additional_smoothing_2 = 0
         self.feet_rotation = param["feetrot"]
         self.use_hands = param["use_hands"]
         self.ignore_hip = param["ignore_hip"]
@@ -32,8 +34,6 @@ class Parameters():
         self.calib_rot = True
         self.calib_tilt = True
         self.calib_scale = True
-
-        self.prev_smoothing = self.smoothing
 
         self.recalibrate = False
 
@@ -53,7 +53,11 @@ class Parameters():
         self.flip = False
 
         self.load_params()
-
+        
+        self.smoothing = self.smoothing_1
+        self.additional_smoothing = self.additional_smoothing_1
+        
+        #self.prev_smoothing = self.smoothing
     
     def change_recalibrate(self):
         self.recalibrate = True
@@ -84,13 +88,23 @@ class Parameters():
         self.rotate_image = self.img_rot_dict[val]
 
 
-    def change_smoothing(self, val):
+    def change_smoothing(self, val, paramid = 0):
         print(f"Changed smoothing value to {val}")
         self.smoothing = val
         
-    def change_additional_smoothing(self, val):
+        if paramid == 1:
+            self.smoothing_1 = val
+        if paramid == 2:
+            self.smoothing_2 = val
+        
+    def change_additional_smoothing(self, val, paramid = 0):
         print(f"Changed additional smoothing value to {val}")
         self.additional_smoothing = val
+
+        if paramid == 1:
+            self.additional_smoothing_1 = val
+        if paramid == 2:
+            self.additional_smoothing_2 = val
 
     def change_camera_latency(self, val):
         print(f"Changed camera latency to {val}")
@@ -104,10 +118,12 @@ class Parameters():
     def save_params(self):
         param = {}
         param["rotate"] = self.img_rot_dict_rev[self.rotate_image] 
-        param["smooth"] = self.smoothing
+        param["smooth1"] = self.smoothing_1
+        param["smooth2"] = self.smoothing_2
 
         param["camlatency"] = self.camera_latency
-        param["addsmooth"] = self.additional_smoothing
+        param["addsmooth1"] = self.additional_smoothing_1
+        param["addsmooth2"] = self.additional_smoothing_2
 
         param["roty"] = self.global_rot_y.as_euler('zyx', degrees=True)[1]
         param["rotx"] = self.global_rot_x.as_euler('zyx', degrees=True)[2]
@@ -130,9 +146,11 @@ class Parameters():
                 param = json.load(f)
 
             self.rotate_image = self.img_rot_dict[param["rotate"]]
-            self.smoothing = param["smooth"]
+            self.smoothing_1 = param["smooth1"]
+            self.smoothing_2 = param["smooth2"]
             self.camera_latency = param["camlatency"]
-            self.additional_smoothing = param["addsmooth"]
+            self.additional_smoothing_1 = param["addsmooth1"]
+            self.additional_smoothing_2 = param["addsmooth2"]
 
             self.global_rot_y = R.from_euler('y',param["roty"],degrees=True)
             self.global_rot_x = R.from_euler('x',param["rotx"],degrees=True)
