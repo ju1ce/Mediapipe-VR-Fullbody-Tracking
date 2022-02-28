@@ -16,7 +16,7 @@ class Parameters():
         self.maximgsize = param["imgsize"]               #to prevent working with huge images, images that have one axis larger than this value will be downscaled.
         self.cameraid = param["camid"]                    #to use with an usb or virtual webcam. If 0 doesnt work/opens wrong camera, try numbers 1-5 or so
         #cameraid = "http://192.168.1.102:8080/video"   #to use ip webcam, uncomment this line and change to your ip
-        self.hmd_to_neck_offset = param["neckoffset"]    #offset of your hmd to the base of your neck, to ensure the tracking is stable even if you look around. Default is 20cm down, 10cm back.
+        self.hmd_to_neck_offset = [0,-0.2,0.1]    #offset of your hmd to the base of your neck, to ensure the tracking is stable even if you look around. Default is 20cm down, 10cm back.
         self.preview_skeleton = param["prevskel"]             #if True, whole skeleton will appear in vr 2 meters in front of you. Good to visualize if everything is working
         self.dont_wait_hmd = param["waithmd"]                  #dont wait for movement from hmd, start inference immediately.
         self.rotate_image = 0 # cv2.ROTATE_90_CLOCKWISE # cv2.ROTATE_90_COUTERCLOCKWISE # cv2.ROTATE_180 # None # if you want, rotate the camera
@@ -116,6 +116,9 @@ class Parameters():
         print(f"Changed camera latency to {val}")
         self.camera_latency = val
 
+    def change_neck_offset(self,x,y,z):
+        print(f"Hmd to neck offset changed to: [{x},{y},{z}]")
+        self.hmd_to_neck_offset = [x,y,z]
 
     def ready2exit(self):
         self.exit_ready = True
@@ -142,6 +145,8 @@ class Parameters():
         param["calibscale"] = self.calib_scale
         
         param["flip"] = self.flip
+        
+        param["hmd_to_neck_offset"] = self.hmd_to_neck_offset
         
         print(param["roty"])
         
@@ -171,6 +176,8 @@ class Parameters():
             self.calib_rot = param["calibrot"]
             self.calib_tilt = param["calibtilt"]
             self.calib_scale = param["calibscale"]
+            
+            self.hmd_to_neck_offset = param["hmd_to_neck_offset"]
             
             self.flip = param["flip"]
         except:

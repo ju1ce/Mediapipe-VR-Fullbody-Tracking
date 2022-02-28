@@ -83,10 +83,12 @@ def getparams():
     maximgsize.pack()
     maximgsize.insert(0,param["imgsize"])
 
-    tk.Label(text="Offset of HMD to neck:", width = 50).pack()
-    hmdoffsettext = tk.Entry(width = 50)
-    hmdoffsettext.pack()
-    hmdoffsettext.insert(0," ".join(map(str,param["neckoffset"])))
+    if False:
+
+        tk.Label(text="Offset of HMD to neck:", width = 50).pack()
+        hmdoffsettext = tk.Entry(width = 50)
+        hmdoffsettext.pack()
+        hmdoffsettext.insert(0," ".join(map(str,param["neckoffset"])))
     
     if False:
         tk.Label(text="Smoothing:", width = 50).pack()
@@ -169,7 +171,7 @@ def getparams():
 
     cameraid = camid.get()
     maximgsize = int(maximgsize.get())
-    hmd_to_neck_offset = [float(val) for val in hmdoffsettext.get().split(" ")]
+    #hmd_to_neck_offset = [float(val) for val in hmdoffsettext.get().split(" ")]
     preview_skeleton = bool(varskel.get())
     dont_wait_hmd = False #bool(varhmdwait.get()) 
     
@@ -189,7 +191,7 @@ def getparams():
     param = {}
     param["camid"] = cameraid
     param["imgsize"] = maximgsize
-    param["neckoffset"] = hmd_to_neck_offset
+    #param["neckoffset"] = hmd_to_neck_offset
     param["prevskel"] = preview_skeleton
     param["waithmd"] = dont_wait_hmd
 

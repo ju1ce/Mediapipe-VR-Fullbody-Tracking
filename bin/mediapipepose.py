@@ -135,7 +135,8 @@ pose = mp_pose.Pose(                #create our detector. These are default para
     model_complexity=params.model,
     min_detection_confidence=0.5,
     min_tracking_confidence=params.min_tracking_confidence,
-    smooth_landmarks=params.smooth_landmarks) 
+    smooth_landmarks=params.smooth_landmarks,
+    static_image_mode=False) 
   
 
 def shutdown():

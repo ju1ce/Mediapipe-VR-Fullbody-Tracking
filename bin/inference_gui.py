@@ -84,6 +84,13 @@ class InferenceWindow(tk.Frame):
         frame5.pack()
         self.change_image_rotation_frame(frame5)
         
+        # neck offset
+        
+        frame6 = tk.Frame(self.root)
+        frame6.pack()
+        self.change_neck_offset_frame(frame6)
+        
+        #frametime log
         self.log_frametime_var = tk.BooleanVar(value=self.params.log_frametime)
         log_frametime_check = tk.Checkbutton(self.root, text="Log frametimes to console", variable=self.log_frametime_var, command=self.change_log_frametime)
         log_frametime_check.pack()
@@ -93,7 +100,23 @@ class InferenceWindow(tk.Frame):
 
         #self.root.after(0, self.set_rot_y_var)
         #self.root.after(0, self.set_rot_x_var)
+          
+    def change_neck_offset_frame(self,frame):
+        tk.Label(frame, text="HMD to neck offset:", width = 20).pack(side='left')
+        
+        text1 = tk.Entry(frame, width = 5)
+        text1.pack(side='left')
+        text1.insert(0, self.params.hmd_to_neck_offset[0])
+        
+        text2 = tk.Entry(frame, width = 5)
+        text2.pack(side='left')
+        text2.insert(0, self.params.hmd_to_neck_offset[1])
+        
+        text3 = tk.Entry(frame, width = 5)
+        text3.pack(side='left')
+        text3.insert(0, self.params.hmd_to_neck_offset[2])
 
+        tk.Button(frame, text='Update', command=lambda *args: self.params.change_neck_offset(float(text1.get()),float(text2.get()),float(text3.get()))).pack(side='left')
 
     def change_log_frametime(self):
         self.params.log_frametime = self.log_frametime_var.get()
