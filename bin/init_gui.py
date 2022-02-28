@@ -53,7 +53,8 @@ def getparams():
         param["smooth_landmarks"] = True
     if "min_tracking_confidence" not in param:
         param["min_tracking_confidence"] = 0.5
-       
+    if "static_image" not in param:
+        param["static_image"] = False    
 
     window = tk.Tk()
 
@@ -164,6 +165,10 @@ def getparams():
     trackc = tk.Entry(width = 20)
     trackc.pack()
     trackc.insert(0,param["min_tracking_confidence"])
+    
+    varstatic = tk.IntVar(value = param["static_image"])
+    static_check = tk.Checkbutton(text = "Static image mode", variable = varstatic)
+    static_check.pack()
 
     tk.Button(text='Save and continue', command=window.quit).pack()
 
@@ -187,6 +192,7 @@ def getparams():
     mp_smoothing = bool(varmsmooth.get())
     model_complexity = int(modelc.get())
     min_tracking_confidence = float(trackc.get())
+    static_image = bool(varstatic.get())
 
     param = {}
     param["camid"] = cameraid
@@ -207,6 +213,7 @@ def getparams():
     
     param["model_complexity"] = model_complexity
     param["smooth_landmarks"] = mp_smoothing
+    param["static_image"] = static_image
     param["min_tracking_confidence"] = min_tracking_confidence
     
     pickle.dump(param,open("params.p","wb"))
