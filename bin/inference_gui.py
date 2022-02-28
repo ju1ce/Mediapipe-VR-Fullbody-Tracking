@@ -16,7 +16,7 @@ class InferenceWindow(tk.Frame):
         # calibrate rotation
         self.calib_rot_var = tk.BooleanVar(value=self.params.calib_rot)
         self.calib_flip_var = tk.BooleanVar(value=self.params.flip)
-        self.rot_y_var = tk.DoubleVar(value=self.params.global_rot_y.as_euler('zyx', degrees=True)[1])
+        self.rot_y_var = tk.DoubleVar(value=180-self.params.global_rot_y.as_euler('zyx', degrees=True)[1])
 
         frame1 = tk.Frame(self.root)
         frame1.pack()
@@ -83,6 +83,10 @@ class InferenceWindow(tk.Frame):
         frame5 = tk.Frame(self.root)
         frame5.pack()
         self.change_image_rotation_frame(frame5)
+        
+        self.log_frametime_var = tk.BooleanVar(value=self.params.log_frametime)
+        log_frametime_check = tk.Checkbutton(self.root, text="Log frametimes to console", variable=self.log_frametime_var, command=self.change_log_frametime)
+        log_frametime_check.pack()
 
         # exit
         tk.Button(self.root, text='Press to exit', command=self.params.ready2exit).pack()
@@ -91,6 +95,12 @@ class InferenceWindow(tk.Frame):
         #self.root.after(0, self.set_rot_x_var)
 
 
+    def change_log_frametime(self):
+        self.params.log_frametime = self.log_frametime_var.get()
+        if self.params.log_frametime:
+            print("Enabled frametime logging")
+        else:
+            print("Disabled frametime logging")
 
     def set_rot_y_var(self):
         angle = -(180+self.params.global_rot_y.as_euler('zyx', degrees=True)[1])

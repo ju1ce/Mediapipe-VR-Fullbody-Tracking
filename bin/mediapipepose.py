@@ -273,9 +273,13 @@ while(True):
                         joint = pose3d[i] - offset      #if previewing skeleton, send the position of each keypoint to steamvr without rotation
                         if use_steamvr:
                             sendToSteamVR(f"updatepose {i} {joint[0]} {joint[1]} {joint[2] - 2} 1 0 0 0 {params.camera_latency} 0.8") 
-
+    
+    
     #print(f"Inference time: {time.time()-t0}\nSmoothing value: {smoothing}\n")        #print how long it took to detect and calculate everything
     inference_time = time.time() - t0
+    
+    if params.log_frametime:
+        print(f"Inference time: {inference_time}")
     
     img = cv2.cvtColor(img,cv2.COLOR_RGB2BGR)       #convert back to bgr and draw the pose
     mp_drawing.draw_landmarks(

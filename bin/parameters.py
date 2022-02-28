@@ -55,6 +55,8 @@ class Parameters():
         self.paused = False
         
         self.flip = False
+        
+        self.log_frametime = False
 
         self.load_params()
         
@@ -129,7 +131,8 @@ class Parameters():
         param["addsmooth1"] = self.additional_smoothing_1
         param["addsmooth2"] = self.additional_smoothing_2
 
-        param["roty"] = self.global_rot_y.as_euler('zyx', degrees=True)[1]
+        #if self.flip:
+        param["roty"] = 180-self.global_rot_y.as_euler('zyx', degrees=True)[1]
         param["rotx"] = self.global_rot_x.as_euler('zyx', degrees=True)[2]
         param["rotz"] = self.global_rot_z.as_euler('zyx', degrees=True)[0] 
         param["scale"] = self.posescale
@@ -139,7 +142,9 @@ class Parameters():
         param["calibscale"] = self.calib_scale
         
         param["flip"] = self.flip
-
+        
+        print(param["roty"])
+        
         with open("saved_params.json", "w") as f:
             json.dump(param, f)
 
@@ -148,6 +153,8 @@ class Parameters():
         try:
             with open("saved_params.json", "r") as f:
                 param = json.load(f)
+
+            print(param["roty"])
 
             self.rotate_image = self.img_rot_dict[param["rotate"]]
             self.smoothing_1 = param["smooth1"]
