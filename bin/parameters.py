@@ -6,6 +6,10 @@ import json
 class Parameters():
     def __init__(self) -> None:
         param = getparams()
+        
+        self.model = param["model_complexity"]
+        self.smooth_landmarks = param["smooth_landmarks"]
+        self.min_tracking_confidence = param["min_tracking_confidence"]
 
         #PARAMETERS:
         #model =  1          #TODO: add parameter for which model size to use

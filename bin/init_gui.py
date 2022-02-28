@@ -47,6 +47,13 @@ def getparams():
         param["camera_width"] = 640
     if "camera_height" not in param:
         param["camera_height"] = 480
+    if "model_complexity" not in param:
+        param["model_complexity"] = 1
+    if "smooth_landmarks" not in param:
+        param["smooth_landmarks"] = True
+    if "min_tracking_confidence" not in param:
+        param["min_tracking_confidence"] = 0.5
+       
 
     window = tk.Tk()
 
@@ -138,6 +145,24 @@ def getparams():
     skeleton_check = tk.Checkbutton(text = "DEV: preview skeleton in VR", variable = varskel)
     skeleton_check.pack()
 
+    tk.Label(text="-"*50, width = 50).pack()
+
+    tk.Label(text="[ADVANCED] MediaPipe estimator parameters:", width = 50).pack()
+
+    tk.Label(text="Model complexity:", width = 50).pack()
+    modelc = tk.Entry(width = 20)
+    modelc.pack()
+    modelc.insert(0,param["model_complexity"])
+    
+    varmsmooth = tk.IntVar(value = param["smooth_landmarks"])
+    msmooth_check = tk.Checkbutton(text = "Smooth landmarks", variable = varmsmooth)
+    msmooth_check.pack()
+    
+    tk.Label(text="Min tracking confidence:", width = 50).pack()
+    trackc = tk.Entry(width = 20)
+    trackc.pack()
+    trackc.insert(0,param["min_tracking_confidence"])
+
     tk.Button(text='Save and continue', command=window.quit).pack()
 
     window.mainloop()
@@ -156,6 +181,10 @@ def getparams():
     camera_settings = bool(varcamsettings.get())
     camera_height = camheight.get()
     camera_width = camwidth.get()
+    
+    mp_smoothing = bool(varmsmooth.get())
+    model_complexity = int(modelc.get())
+    min_tracking_confidence = float(trackc.get())
 
     param = {}
     param["camid"] = cameraid
@@ -173,6 +202,10 @@ def getparams():
     param["camera_settings"] = camera_settings
     param["camera_height"] = camera_height
     param["camera_width"] = camera_width
+    
+    param["model_complexity"] = model_complexity
+    param["smooth_landmarks"] = mp_smoothing
+    param["min_tracking_confidence"] = min_tracking_confidence
     
     pickle.dump(param,open("params.p","wb"))
     
