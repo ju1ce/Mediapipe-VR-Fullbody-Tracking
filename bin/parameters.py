@@ -5,7 +5,11 @@ import json
 
 class Parameters():
     def __init__(self) -> None:
-        param = getparams()
+        param = None
+        while param == None:
+            param = getparams()
+        
+        self.advanced = param["advanced"]
         
         self.model = param["model_complexity"]
         self.smooth_landmarks = param["smooth_landmarks"]
@@ -149,7 +153,7 @@ class Parameters():
         
         param["hmd_to_neck_offset"] = self.hmd_to_neck_offset
         
-        print(param["roty"])
+        #print(param["roty"])
         
         with open("saved_params.json", "w") as f:
             json.dump(param, f)
@@ -160,7 +164,7 @@ class Parameters():
             with open("saved_params.json", "r") as f:
                 param = json.load(f)
 
-            print(param["roty"])
+            #print(param["roty"])
 
             self.rotate_image = self.img_rot_dict[param["rotate"]]
             self.smoothing_1 = param["smooth1"]
@@ -178,7 +182,8 @@ class Parameters():
             self.calib_tilt = param["calibtilt"]
             self.calib_scale = param["calibscale"]
             
-            self.hmd_to_neck_offset = param["hmd_to_neck_offset"]
+            if self.advanced:
+                self.hmd_to_neck_offset = param["hmd_to_neck_offset"]
             
             self.flip = param["flip"]
         except:

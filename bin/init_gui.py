@@ -2,6 +2,10 @@ import tkinter as tk
 import pickle
 import cv2
 
+def set_advanced(window,param):
+    param["switch_advanced"] = True
+    window.quit()
+
 def getparams():
     
     try:
@@ -55,7 +59,9 @@ def getparams():
         param["min_tracking_confidence"] = 0.5
     if "static_image" not in param:
         param["static_image"] = False    
-
+    if "advanced" not in param:
+        param["advanced"] = False
+       
     window = tk.Tk()
 
     tk.Label(text="Camera IP or ID:", width = 50).pack()
@@ -138,37 +144,45 @@ def getparams():
     hip_check = tk.Checkbutton(text = "Don't use hip tracker", variable = varhip)
     hip_check.pack()
     
+    param["switch_advanced"] = False
+    if param["advanced"]:
+        tk.Button(text='Disable advanced mode', command=lambda *args: set_advanced(window,param)).pack()
+    else:
+        tk.Button(text='Enable advanced mode', command=lambda *args: set_advanced(window,param)).pack()
+    
     tk.Label(text="-"*50, width = 50).pack()
     
-    varhand = tk.IntVar(value = param["use_hands"])
-    hand_check = tk.Checkbutton(text = "DEV: spawn trackers for hands", variable = varhand)
-    hand_check.pack()
-    
-    varskel = tk.IntVar(value = param["prevskel"])
-    skeleton_check = tk.Checkbutton(text = "DEV: preview skeleton in VR", variable = varskel)
-    skeleton_check.pack()
+    if param["advanced"]:
+        
+        varhand = tk.IntVar(value = param["use_hands"])
+        hand_check = tk.Checkbutton(text = "DEV: spawn trackers for hands", variable = varhand)
+        hand_check.pack()
+        
+        varskel = tk.IntVar(value = param["prevskel"])
+        skeleton_check = tk.Checkbutton(text = "DEV: preview skeleton in VR", variable = varskel)
+        skeleton_check.pack()
 
-    tk.Label(text="-"*50, width = 50).pack()
+        tk.Label(text="-"*50, width = 50).pack()
 
-    tk.Label(text="[ADVANCED] MediaPipe estimator parameters:", width = 50).pack()
+        tk.Label(text="[ADVANCED] MediaPipe estimator parameters:", width = 50).pack()
 
-    tk.Label(text="Model complexity:", width = 50).pack()
-    modelc = tk.Entry(width = 20)
-    modelc.pack()
-    modelc.insert(0,param["model_complexity"])
-    
-    varmsmooth = tk.IntVar(value = param["smooth_landmarks"])
-    msmooth_check = tk.Checkbutton(text = "Smooth landmarks", variable = varmsmooth)
-    msmooth_check.pack()
-    
-    tk.Label(text="Min tracking confidence:", width = 50).pack()
-    trackc = tk.Entry(width = 20)
-    trackc.pack()
-    trackc.insert(0,param["min_tracking_confidence"])
-    
-    varstatic = tk.IntVar(value = param["static_image"])
-    static_check = tk.Checkbutton(text = "Static image mode", variable = varstatic)
-    static_check.pack()
+        tk.Label(text="Model complexity:", width = 50).pack()
+        modelc = tk.Entry(width = 20)
+        modelc.pack()
+        modelc.insert(0,param["model_complexity"])
+        
+        varmsmooth = tk.IntVar(value = param["smooth_landmarks"])
+        msmooth_check = tk.Checkbutton(text = "Smooth landmarks", variable = varmsmooth)
+        msmooth_check.pack()
+        
+        tk.Label(text="Min tracking confidence:", width = 50).pack()
+        trackc = tk.Entry(width = 20)
+        trackc.pack()
+        trackc.insert(0,param["min_tracking_confidence"])
+        
+        varstatic = tk.IntVar(value = param["static_image"])
+        static_check = tk.Checkbutton(text = "Static image mode", variable = varstatic)
+        static_check.pack()
 
     tk.Button(text='Save and continue', command=window.quit).pack()
 
@@ -177,22 +191,38 @@ def getparams():
     cameraid = camid.get()
     maximgsize = int(maximgsize.get())
     #hmd_to_neck_offset = [float(val) for val in hmdoffsettext.get().split(" ")]
-    preview_skeleton = bool(varskel.get())
+    
     dont_wait_hmd = False #bool(varhmdwait.get()) 
     
     #camera_latency = float(camlatencytext.get())
     #smoothing = float(smoothingtext.get())
     feet_rotation = bool(varfeet.get())
-    use_hands = bool(varhand.get())
+    
     ignore_hip = bool(varhip.get())
     camera_settings = bool(varcamsettings.get())
     camera_height = camheight.get()
     camera_width = camwidth.get()
     
-    mp_smoothing = bool(varmsmooth.get())
-    model_complexity = int(modelc.get())
-    min_tracking_confidence = float(trackc.get())
-    static_image = bool(varstatic.get())
+    if param["advanced"]:
+        preview_skeleton = bool(varskel.get())
+        use_hands = bool(varhand.get())
+        
+        mp_smoothing = bool(varmsmooth.get())
+        model_complexity = int(modelc.get())
+        min_tracking_confidence = float(trackc.get())
+        static_image = bool(varstatic.get())
+    else:
+        preview_skeleton = False
+        use_hands = False
+        
+        mp_smoothing = True
+        model_complexity = 1
+        min_tracking_confidence = 0.5
+        static_image = False
+
+    switch_advanced = param["switch_advanced"]
+
+    advanced = param["advanced"]
 
     param = {}
     param["camid"] = cameraid
@@ -216,11 +246,19 @@ def getparams():
     param["static_image"] = static_image
     param["min_tracking_confidence"] = min_tracking_confidence
     
+    if switch_advanced:
+        param["advanced"] = not advanced
+    else:
+        param["advanced"] = advanced
+    
     pickle.dump(param,open("params.p","wb"))
     
     window.destroy()
     
-    return param
+    if switch_advanced:
+        return None
+    else:
+        return param
 
 if __name__ == "__main__":
     print(getparams())

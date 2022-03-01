@@ -54,15 +54,16 @@ class InferenceWindow(tk.Frame):
                     command=self.pause_tracking).pack()
                   
         
-        
-        frame_profile = tk.Frame(self.root)
-        frame_profile.pack()
-        tk.Label(frame_profile, text=" ", width = 20).pack(side='left')
-        tk.Label(frame_profile, text="Profile 1", width = 10).pack(side='left')
-        tk.Label(frame_profile, text=" ", width = 5).pack(side='left')
-        tk.Label(frame_profile, text="Profile 2", width = 10).pack(side='left')
-        tk.Label(frame_profile, text=" ", width = 5).pack(side='left')
-        tk.Label(frame_profile, text=" ", width = 5).pack(side='left')
+        # show the Profile 1 profile 2 text:
+        if params.advanced:
+            frame_profile = tk.Frame(self.root)
+            frame_profile.pack()
+            tk.Label(frame_profile, text=" ", width = 20).pack(side='left')
+            tk.Label(frame_profile, text="Profile 1", width = 10).pack(side='left')
+            tk.Label(frame_profile, text=" ", width = 5).pack(side='left')
+            tk.Label(frame_profile, text="Profile 2", width = 10).pack(side='left')
+            tk.Label(frame_profile, text=" ", width = 5).pack(side='left')
+            tk.Label(frame_profile, text=" ", width = 5).pack(side='left')
 
         # smoothing
         frame4 = tk.Frame(self.root)
@@ -85,10 +86,10 @@ class InferenceWindow(tk.Frame):
         self.change_image_rotation_frame(frame5)
         
         # neck offset
-        
-        frame6 = tk.Frame(self.root)
-        frame6.pack()
-        self.change_neck_offset_frame(frame6)
+        if params.advanced:
+            frame6 = tk.Frame(self.root)
+            frame6.pack()
+            self.change_neck_offset_frame(frame6)
         
         #frametime log
         self.log_frametime_var = tk.BooleanVar(value=self.params.log_frametime)
@@ -245,11 +246,12 @@ class InferenceWindow(tk.Frame):
 
         tk.Button(frame, text='Update', command=lambda *args: self.params.change_smoothing(float(smoothingtext1.get()),1)).pack(side='left')
         
-        smoothingtext2 = tk.Entry(frame, width = 10)
-        smoothingtext2.pack(side='left')
-        smoothingtext2.insert(0, self.params.smoothing_2)
+        if self.params.advanced:
+            smoothingtext2 = tk.Entry(frame, width = 10)
+            smoothingtext2.pack(side='left')
+            smoothingtext2.insert(0, self.params.smoothing_2)
 
-        tk.Button(frame, text='Update', command=lambda *args: self.params.change_smoothing(float(smoothingtext2.get()),2)).pack(side='left')
+            tk.Button(frame, text='Update', command=lambda *args: self.params.change_smoothing(float(smoothingtext2.get()),2)).pack(side='left')
         
         tk.Button(frame, text='Disable', command=lambda *args: self.params.change_smoothing(0.0)).pack(side='left')
 
@@ -271,12 +273,12 @@ class InferenceWindow(tk.Frame):
         lat1.insert(0, self.params.additional_smoothing_1)
 
         tk.Button(frame, text='Update', command=lambda *args: self.params.change_additional_smoothing(float(lat1.get()),1)).pack(side='left')
-        
-        lat2 = tk.Entry(frame, width = 10)
-        lat2.pack(side='left')
-        lat2.insert(0, self.params.additional_smoothing_2)
+        if self.params.advanced:
+            lat2 = tk.Entry(frame, width = 10)
+            lat2.pack(side='left')
+            lat2.insert(0, self.params.additional_smoothing_2)
 
-        tk.Button(frame, text='Update', command=lambda *args: self.params.change_additional_smoothing(float(lat2.get()),2)).pack(side='left')
+            tk.Button(frame, text='Update', command=lambda *args: self.params.change_additional_smoothing(float(lat2.get()),2)).pack(side='left')
         
         tk.Button(frame, text='Disable', command=lambda *args: self.params.change_additional_smoothing(0.0)).pack(side='left')
 
