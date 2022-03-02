@@ -293,6 +293,10 @@ class InferenceWindow(tk.Frame):
 
         rot_img_var.trace_add('write', callback=lambda var, index, mode: self.params.change_img_rot(rot_img_var.get()))
 
+        img_mirror_var = tk.BooleanVar(value=self.params.mirror)
+        img_mirror_check = tk.Checkbutton(frame, text="Mirror", variable=img_mirror_var, command=lambda *args: self.params.change_mirror(bool(img_mirror_var.get())))
+        img_mirror_check.grid(row=0, column=5)
+
 
     def autocalibrate(self):
 

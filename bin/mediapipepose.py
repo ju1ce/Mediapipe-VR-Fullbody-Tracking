@@ -21,7 +21,7 @@ import mediapipe as mp
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
-use_steamvr = True
+use_steamvr = False
 
 print("Reading parameters...")
 
@@ -186,6 +186,9 @@ while(True):
     
     if params.rotate_image is not None:        #if set, rotate the image
         img = cv2.rotate(img, params.rotate_image)
+        
+    if params.mirror:
+        img = cv2.flip(img,1)
 
     if max(img.shape) > params.maximgsize:         #if set, ensure image does not exceed the given size.
         ratio = max(img.shape)/params.maximgsize

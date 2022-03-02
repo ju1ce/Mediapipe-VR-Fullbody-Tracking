@@ -62,6 +62,8 @@ class Parameters():
         self.flip = False
         
         self.log_frametime = False
+        
+        self.mirror = False
 
         self.load_params()
         
@@ -125,9 +127,12 @@ class Parameters():
         print(f"Hmd to neck offset changed to: [{x},{y},{z}]")
         self.hmd_to_neck_offset = [x,y,z]
 
+    def change_mirror(self, mirror):
+        print(f"Image mirror set to {mirror}")
+        self.mirror = mirror
+
     def ready2exit(self):
         self.exit_ready = True
-
 
     def save_params(self):
         param = {}
@@ -152,6 +157,8 @@ class Parameters():
         param["flip"] = self.flip
         
         param["hmd_to_neck_offset"] = self.hmd_to_neck_offset
+        
+        param["mirror"] = self.mirror
         
         #print(param["roty"])
         
@@ -181,6 +188,8 @@ class Parameters():
             self.calib_rot = param["calibrot"]
             self.calib_tilt = param["calibtilt"]
             self.calib_scale = param["calibscale"]
+            
+            self.mirror = param["mirror"]
             
             if self.advanced:
                 self.hmd_to_neck_offset = param["hmd_to_neck_offset"]
