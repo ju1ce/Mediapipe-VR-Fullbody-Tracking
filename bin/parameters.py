@@ -45,10 +45,11 @@ class Parameters():
         self.calib_scale = True
 
         self.recalibrate = False
-
-        self.global_rot_y = R.from_euler('y',0,degrees=True)     #default rotations, for 0 degrees around y and x
-        self.global_rot_x = R.from_euler('x',0,degrees=True) 
-        self.global_rot_z = R.from_euler('z',0,degrees=True) 
+        
+        #rotations in degrees!
+        self.euler_rot_y = 0
+        self.euler_rot_x = 0
+        self.euler_rot_z = 0
 
         self.posescale = 1     
 
@@ -67,6 +68,10 @@ class Parameters():
 
         self.load_params()
         
+        self.global_rot_y = R.from_euler('y',self.euler_rot_y,degrees=True)     #default rotations, for 0 degrees around y and x
+        self.global_rot_x = R.from_euler('x',self.euler_rot_x-90,degrees=True) 
+        self.global_rot_z = R.from_euler('z',self.euler_rot_z-180,degrees=True) 
+        
         self.smoothing = self.smoothing_1
         self.additional_smoothing = self.additional_smoothing_1
         
@@ -78,15 +83,18 @@ class Parameters():
 
     def rot_change_y(self, value):                                  #callback functions. Whenever the value on sliders are changed, they are called
         print(f"Changed y rotation value to {value}")
+        self.euler_rot_y = value
         self.global_rot_y = R.from_euler('y',value,degrees=True)     #and the rotation is updated with the new value.
         
 
     def rot_change_x(self, value):
         print(f"Changed x rotation value to {value}")
+        self.euler_rot_x = value
         self.global_rot_x = R.from_euler('x',value-90,degrees=True) 
         
     def rot_change_z(self, value):
         print(f"Changed z rotation value to {value}")
+        self.euler_rot_z = value
         self.global_rot_z = R.from_euler('z',value-180,degrees=True) 
          
 
@@ -145,9 +153,9 @@ class Parameters():
         param["addsmooth2"] = self.additional_smoothing_2
 
         #if self.flip:
-        param["roty"] = 180-self.global_rot_y.as_euler('zyx', degrees=True)[1]
-        param["rotx"] = self.global_rot_x.as_euler('zyx', degrees=True)[2]
-        param["rotz"] = self.global_rot_z.as_euler('zyx', degrees=True)[0] 
+        param["roty"] = self.euler_rot_y
+        param["rotx"] = self.euler_rot_x
+        param["rotz"] = self.euler_rot_z
         param["scale"] = self.posescale
         
         param["calibrot"] = self.calib_rot
@@ -180,9 +188,9 @@ class Parameters():
             self.additional_smoothing_1 = param["addsmooth1"]
             self.additional_smoothing_2 = param["addsmooth2"]
 
-            self.global_rot_y = R.from_euler('y',param["roty"],degrees=True)
-            self.global_rot_x = R.from_euler('x',param["rotx"],degrees=True)
-            self.global_rot_z = R.from_euler('z',param["rotz"],degrees=True)
+            self.euler_rot_y = param["roty"]
+            self.euler_rot_x = param["rotx"]
+            self.euler_rot_z = param["rotz"]
             self.posescale = param["scale"]
             
             self.calib_rot = param["calibrot"]

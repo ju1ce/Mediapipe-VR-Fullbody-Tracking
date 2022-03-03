@@ -16,7 +16,7 @@ def getparams():
     if "camid" not in param:
         param["camid"] = 'http://192.168.1.103:8080/video'
     if "imgsize" not in param:
-        param["imgsize"] = 800
+        param["imgsize"] = 640
     if "neckoffset" not in param:
         param["neckoffset"] = [0.0, -0.2, 0.1]
     if "prevskel" not in param:
@@ -81,14 +81,19 @@ def getparams():
     camheight.pack()
     camheight.insert(0,param["camera_height"])
     
+    tk.Label(text="NOTE: Opening camera settings may change camera behaviour. \nSome cameras may only work with this enabled, some only with this \ndisabled, and it may change which camera ID you have to use.", width = 55).pack()
+    
     varcamsettings = tk.IntVar(value = param["camera_settings"])
     cam_settings_check = tk.Checkbutton(text = "Attempt to open camera settings", variable = varcamsettings)
     cam_settings_check.pack()
 
-    tk.Label(text="Maximum image size:", width = 50).pack()
-    maximgsize = tk.Entry(width = 20)
-    maximgsize.pack()
-    maximgsize.insert(0,param["imgsize"])
+    if param["advanced"]:
+        tk.Label(text="Maximum image size:", width = 50).pack()
+        maximgsize = tk.Entry(width = 20)
+        maximgsize.pack()
+        maximgsize.insert(0,param["imgsize"])
+
+    tk.Label(text="-"*50, width = 50).pack()
 
     if False:
 
@@ -144,12 +149,6 @@ def getparams():
     hip_check = tk.Checkbutton(text = "Don't use hip tracker", variable = varhip)
     hip_check.pack()
     
-    param["switch_advanced"] = False
-    if param["advanced"]:
-        tk.Button(text='Disable advanced mode', command=lambda *args: set_advanced(window,param)).pack()
-    else:
-        tk.Button(text='Enable advanced mode', command=lambda *args: set_advanced(window,param)).pack()
-    
     tk.Label(text="-"*50, width = 50).pack()
     
     if param["advanced"]:
@@ -183,13 +182,19 @@ def getparams():
         varstatic = tk.IntVar(value = param["static_image"])
         static_check = tk.Checkbutton(text = "Static image mode", variable = varstatic)
         static_check.pack()
+    
+    param["switch_advanced"] = False
+    if param["advanced"]:
+        tk.Label(text="-"*50, width = 50).pack()
+        tk.Button(text='Disable advanced mode', command=lambda *args: set_advanced(window,param)).pack()
+    else:
+        tk.Button(text='Enable advanced mode', command=lambda *args: set_advanced(window,param)).pack()
 
     tk.Button(text='Save and continue', command=window.quit).pack()
 
     window.mainloop()
 
     cameraid = camid.get()
-    maximgsize = int(maximgsize.get())
     #hmd_to_neck_offset = [float(val) for val in hmdoffsettext.get().split(" ")]
     
     dont_wait_hmd = False #bool(varhmdwait.get()) 
@@ -204,6 +209,8 @@ def getparams():
     camera_width = camwidth.get()
     
     if param["advanced"]:
+        maximgsize = int(maximgsize.get())
+        
         preview_skeleton = bool(varskel.get())
         use_hands = bool(varhand.get())
         
@@ -212,6 +219,8 @@ def getparams():
         min_tracking_confidence = float(trackc.get())
         static_image = bool(varstatic.get())
     else:
+        maximgsize = 640
+        
         preview_skeleton = False
         use_hands = False
         

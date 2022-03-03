@@ -127,9 +127,9 @@ class InferenceWindow(tk.Frame):
             print("Disabled frametime logging")
 
     def set_rot_y_var(self):
-        angle = -(180+self.params.global_rot_y.as_euler('zyx', degrees=True)[1])
+        angle = self.params.euler_rot_y
         
-        if not self.params.flip:
+        if self.params.flip:
             angle += 180
         
         #print("calculated angle from rot is:",angle)
@@ -143,11 +143,11 @@ class InferenceWindow(tk.Frame):
 
 
     def set_rot_z_var(self):
-        self.rot_z_var.set(self.params.global_rot_z.as_euler('zyx', degrees=True)[0]+180)
+        self.rot_z_var.set(self.params.euler_rot_z)
 
 
     def set_rot_x_var(self):
-        self.rot_x_var.set(self.params.global_rot_x.as_euler('zyx', degrees=True)[2]+90)
+        self.rot_x_var.set(self.params.euler_rot_x)
         #self.root.after(0, self.set_rot_x_var)
 
 
@@ -326,37 +326,37 @@ class InferenceWindow(tk.Frame):
         
             ## roll calibaration
             
-            value = np.arctan2(feet_middle[0],-feet_middle[1])
+            value = np.arctan2(feet_middle[0],-feet_middle[1]) * 57.295779513
             
-            print("Precalib z angle: ", value * 57.295779513)
+            print("Precalib z angle: ", value)
             
-            self.params.global_rot_z = R.from_euler('z',-value)
+            self.params.rot_change_z(-value+180)
             self.set_rot_z_var()
             
             for j in range(self.params.pose3d_og.shape[0]):
                 self.params.pose3d_og[j] = self.params.global_rot_z.apply(self.params.pose3d_og[j])
                 
             feet_middle = (self.params.pose3d_og[0] + self.params.pose3d_og[5])/2
-            value = np.arctan2(feet_middle[0],-feet_middle[1])
+            value = np.arctan2(feet_middle[0],-feet_middle[1]) * 57.295779513
             
-            print("Postcalib z angle: ", value * 57.295779513)
+            print("Postcalib z angle: ", value)
                 
             ##tilt calibration
                 
-            value = np.arctan2(feet_middle[2],-feet_middle[1])
+            value = np.arctan2(feet_middle[2],-feet_middle[1]) * 57.295779513
             
-            print("Precalib x angle: ", value * 57.295779513)
+            print("Precalib x angle: ", value)
             
-            self.params.global_rot_x = R.from_euler('x',value)
+            self.params.rot_change_x(value+90)
             self.set_rot_x_var()
         
             for j in range(self.params.pose3d_og.shape[0]):
                 self.params.pose3d_og[j] = self.params.global_rot_x.apply(self.params.pose3d_og[j])
                 
             feet_middle = (self.params.pose3d_og[0] + self.params.pose3d_og[5])/2
-            value = np.arctan2(feet_middle[2],-feet_middle[1])
+            value = np.arctan2(feet_middle[2],-feet_middle[1]) * 57.295779513
             
-            print("Postcalib x angle: ", value * 57.295779513)
+            print("Postcalib x angle: ", value)
 
         if use_steamvr and self.params.calib_rot:
             feet_rot = self.params.pose3d_og[0] - self.params.pose3d_og[5]
@@ -371,11 +371,11 @@ class InferenceWindow(tk.Frame):
    
             print("Calibrate to value:", value * 57.295779513) 
             
-            self.params.global_rot_y = R.from_euler('y',value)
+            self.params.rot_change_y(value)
             
 
-            angle = self.params.global_rot_y.as_euler('zyx', degrees=True)
-            print("angle from rot = ", -(180+angle[1]), "whole:",angle)
+            #angle = self.params.global_rot_y.as_euler('zyx', degrees=True)
+            #print("angle from rot = ", -(180+angle[1]), "whole:",angle)
             
             self.set_rot_y_var()
 
