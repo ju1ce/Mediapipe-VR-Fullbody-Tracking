@@ -21,7 +21,7 @@ import mediapipe as mp
 mp_drawing = mp.solutions.drawing_utils
 mp_pose = mp.solutions.pose
 
-use_steamvr = False
+use_steamvr = True
 
 print("Reading parameters...")
 
@@ -39,14 +39,15 @@ def camera_thread_fun():
     
     if len(params.cameraid) <= 2:
         cameraid = int(params.cameraid)
+        if params.camera_settings:
+            cap = cv2.VideoCapture(cameraid, 700)
+            cap.set(cv2.CAP_PROP_SETTINGS,1)
+        else:
+            cap = cv2.VideoCapture(cameraid)   
     else:
         cameraid = params.cameraid
-    
-    if params.camera_settings:
-        cap = cv2.VideoCapture(cameraid, 700)
-        cap.set(cv2.CAP_PROP_SETTINGS,1)
-    else:
-        cap = cv2.VideoCapture(cameraid)    
+        cap = cv2.VideoCapture(cameraid)  
+     
    
     #codec = 0x47504A4D
     #cap.set(cv2.CAP_PROP_FOURCC, codec)
