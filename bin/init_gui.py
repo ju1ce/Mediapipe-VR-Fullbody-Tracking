@@ -146,7 +146,7 @@ def getparams():
         rot_check.pack()
     
     varhip = tk.IntVar(value = param["ignore_hip"])
-    hip_check = tk.Checkbutton(text = "Don't use hip tracker", variable = varhip)
+    hip_check = tk.Checkbutton(text = "Only spawn feet trackers", variable = varhip)
     hip_check.pack()
     
     tk.Label(text="-"*50, width = 50).pack()
