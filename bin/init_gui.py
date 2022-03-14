@@ -69,7 +69,8 @@ def getparams():
     camid.pack()
     camid.insert(0,param["camid"])
     
-    tk.Label(text="NOTE: Increasing resolution may decrease performance.\n Unless you have problems with opening camera, leave it at default.", width = 50).pack()
+    if not param["advanced"]:
+        tk.Label(text="NOTE: Increasing resolution may decrease performance.\n Unless you have problems with opening camera, leave it at default.", width = 50).pack()
 
     tk.Label(text="Camera width:", width = 50).pack()
     camwidth = tk.Entry(width = 20)
@@ -81,7 +82,8 @@ def getparams():
     camheight.pack()
     camheight.insert(0,param["camera_height"])
     
-    tk.Label(text="NOTE: Opening camera settings may change camera behaviour. \nSome cameras may only work with this enabled, some only with this \ndisabled, and it may change which camera ID you have to use.", width = 55).pack()
+    if not param["advanced"]:
+        tk.Label(text="NOTE: Opening camera settings may change camera behaviour. \nSome cameras may only work with this enabled, some only with this \ndisabled, and it may change which camera ID you have to use.", width = 55).pack()
     
     varcamsettings = tk.IntVar(value = param["camera_settings"])
     cam_settings_check = tk.Checkbutton(text = "Attempt to open camera settings", variable = varcamsettings)
@@ -145,8 +147,11 @@ def getparams():
         rot_check = tk.Checkbutton(text = "Enable automatic rotation calibration", variable = varrot)
         rot_check.pack()
     
+    if not param["advanced"]:
+        tk.Label(text="NOTE: VRChat requires a hip tracker. Only disable it if you \nuse another software for hip tracking, such as  owoTrack.", width = 55).pack()
+    
     varhip = tk.IntVar(value = param["ignore_hip"])
-    hip_check = tk.Checkbutton(text = "Only spawn feet trackers", variable = varhip)
+    hip_check = tk.Checkbutton(text = "Disable hip tracker", variable = varhip)
     hip_check.pack()
     
     tk.Label(text="-"*50, width = 50).pack()
