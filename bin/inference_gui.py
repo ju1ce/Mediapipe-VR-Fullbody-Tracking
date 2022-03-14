@@ -16,7 +16,7 @@ class InferenceWindow(tk.Frame):
         # calibrate rotation
         self.calib_rot_var = tk.BooleanVar(value=self.params.calib_rot)
         self.calib_flip_var = tk.BooleanVar(value=self.params.flip)
-        self.rot_y_var = tk.DoubleVar(value=180-self.params.global_rot_y.as_euler('zyx', degrees=True)[1])
+        self.rot_y_var = tk.DoubleVar(value=self.params.euler_rot_y)
 
         frame1 = tk.Frame(self.root)
         frame1.pack()
@@ -26,8 +26,8 @@ class InferenceWindow(tk.Frame):
 
         # calibrate tilt
         self.calib_tilt_var = tk.BooleanVar(value=self.params.calib_tilt)
-        self.rot_x_var = tk.DoubleVar(value=self.params.global_rot_x.as_euler('zyx', degrees=True)[2]+90)
-        self.rot_z_var = tk.DoubleVar(value=self.params.global_rot_z.as_euler('zyx', degrees=True)[0]+180)
+        self.rot_x_var = tk.DoubleVar(value=self.params.euler_rot_x)
+        self.rot_z_var = tk.DoubleVar(value=self.params.euler_rot_z)
 
         frame2 = tk.Frame(self.root)
         frame2.pack()
@@ -371,7 +371,7 @@ class InferenceWindow(tk.Frame):
    
             print("Calibrate to value:", value * 57.295779513) 
             
-            self.params.rot_change_y(value)
+            self.params.rot_change_y(value * 57.295779513)
             
 
             #angle = self.params.global_rot_y.as_euler('zyx', degrees=True)
