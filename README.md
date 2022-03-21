@@ -88,6 +88,13 @@ For IP Webcam:
   - Ensure that your phone is using WiFi and is on the same network as the PC. (the pc can be connected through ethernet, as long as its to the same router)
   - Check for typos. Its really easy to miss a number or a letter somewhere.
     
+**Connection to SteamVR fails after 10 retries:**
+  
+  - Make sure SteamVR is open and a headset is connected
+  - Make sure that you installed the driver with /driver_files/install_driver.exe, and that the driver installed properly
+  - Open SteamVR settings -> startup -> addons, and make sure that apriltagtrackers is enabled
+  - If SteamVR runs in administrator mode, you may have to run mediapipepose by running /bin/mediapipepose.exe as administrator
+  
 **The tracking is unuseably bad:**
   
 While the tracking is not perfect even under ideal conditions due to no depth information, there is still a few things you can do to improve it:
