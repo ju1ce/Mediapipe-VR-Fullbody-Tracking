@@ -106,7 +106,7 @@ def getparams():
     tk.Label(text="-"*50, width = 50).pack()
     
     varhand = tk.IntVar(value = param["use_hands"])
-    hand_check = tk.Checkbutton(text = "DEV: spawn trackers for hands", variable = varhand)
+    hand_check = tk.Checkbutton(text = "DEV: Spawn trackers for hands", variable = varhand)
     hand_check.pack()
     
     varskel = tk.IntVar(value = param["prevskel"])
