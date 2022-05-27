@@ -1,4 +1,4 @@
-print("Importing libraries....")
+print("Importing libraries...")
 
 from math import degrees
 import os
@@ -64,7 +64,7 @@ def camera_thread_fun():
 
         image_ready = True
         
-        assert ret, "Camera capture failed! Check the cameraid parameter."
+        assert ret, "Camera capture failed! Check the CameraID parameter."
 
 camera_thread = threading.Thread(target=camera_thread_fun, daemon=True)
 camera_thread.start()      #start our thread, which starts camera capture
@@ -81,16 +81,16 @@ if use_steamvr:
     numtrackers = sendToSteamVR("numtrackers")
     for i in range(10):
         if "error" in numtrackers:
-            print("Error in SteamVR connection. Retrying...")
+            print("Error while connecting to SteamVR. Retrying...")
             time.sleep(1)
             numtrackers = sendToSteamVR("numtrackers")
         else:
             break
             
     if "error" in numtrackers:
-        print("Could not connect to SteamVR after 10 retries!")
+        print("Could not connect to SteamVR after 10 tries!")
         time.sleep(10)
-        assert 0, "Could not connect to SteamVR after 10 retries"
+        assert 0, "Could not connect to SteamVR after 10 tries"
  
     numtrackers = int(numtrackers[2])
  
@@ -296,14 +296,3 @@ while(True):
         #print("Exiting... You can close the window after 10 seconds.")
         #exit(0)
         shutdown()
-
-
-
-
-
-
-
-
-
-
-
