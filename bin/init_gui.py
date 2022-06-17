@@ -70,7 +70,7 @@ def getparams():
     camid.insert(0,param["camid"])
     
     if not param["advanced"]:
-        tk.Label(text="NOTE: Increasing resolution may decrease performance.\n Unless you have problems with opening camera, leave it at default.", width = 50).pack()
+        tk.Label(text="NOTE: Increasing resolution may decrease performance.\n Unless you have problems with opening camera, leave it as default.", width = 50).pack()
 
     tk.Label(text="Camera width:", width = 50).pack()
     camwidth = tk.Entry(width = 20)
@@ -148,7 +148,7 @@ def getparams():
         rot_check.pack()
     
     if not param["advanced"]:
-        tk.Label(text="NOTE: VRChat requires a hip tracker. Only disable it if you \nuse another software for hip tracking, such as  owoTrack.", width = 55).pack()
+        tk.Label(text="NOTE: VRChat requires a hip tracker. Only disable it if you \nuse another software for hip tracking, such as owoTrack.", width = 55).pack()
     
     varhip = tk.IntVar(value = param["ignore_hip"])
     hip_check = tk.Checkbutton(text = "Disable hip tracker", variable = varhip)
@@ -159,11 +159,11 @@ def getparams():
     if param["advanced"]:
         
         varhand = tk.IntVar(value = param["use_hands"])
-        hand_check = tk.Checkbutton(text = "DEV: spawn trackers for hands", variable = varhand)
+        hand_check = tk.Checkbutton(text = "DEV: Spawn trackers for hands", variable = varhand)
         hand_check.pack()
         
         varskel = tk.IntVar(value = param["prevskel"])
-        skeleton_check = tk.Checkbutton(text = "DEV: preview skeleton in VR", variable = varskel)
+        skeleton_check = tk.Checkbutton(text = "DEV: Preview skeleton in VR", variable = varskel)
         skeleton_check.pack()
 
         tk.Label(text="-"*50, width = 50).pack()
@@ -195,7 +195,7 @@ def getparams():
     else:
         tk.Button(text='Enable advanced mode', command=lambda *args: set_advanced(window,param)).pack()
 
-    tk.Button(text='Save and continue', command=window.quit).pack()
+    tk.Button(text='Save and Continue', command=window.quit).pack()
 
     window.mainloop()
 
