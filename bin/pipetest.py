@@ -17,8 +17,8 @@ def sendToSteamVR(text):
     
     return array
     
-sendToSteamVR("settings 5 2");
-assert 0
+sendToSteamVR("settings 5 2")
+#assert 0
 
 pipe = open(r'\\.\pipe\ApriltagPipeIn', 'rb+', buffering=0)
 
@@ -52,7 +52,7 @@ pipe = open(r'\\.\pipe\ApriltagPipeIn', 'rb+', buffering=0)
 
 some_data = str.encode("getdevicepose 0")
 pipe.write(some_data)
-resp = pipe.read(1024)
+resp = pipe.read(int(1024))
 string = resp.decode("utf-8")
 print(string)
 
