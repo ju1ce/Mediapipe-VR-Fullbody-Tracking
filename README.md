@@ -134,6 +134,12 @@ This problem should now be fixed. If it still occurs, please let us know either 
 **In vrchat, both legs stick together**
   
 First, make sure that the trackers align with the avatar properly. If they don't, you may need to recalibrate. On some avatars, you may also have to stand with your legs further apart to prevent this.
+
+**In vrchat, trackers dont work and cause issues**
+
+If there are any weird issues inside vrchat and nothing else works, it is usualy caused by mods. Mods can affect full body tracking systems in weird ways, even if the mod doesnt have anything to do with tracking. Try to uninstall all mods, even if they seem irrelevant.
+
+Alternatively, you can also use the --no-mods vrchat launch option.
   
 ## Other tips:
   
