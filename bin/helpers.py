@@ -1,4 +1,4 @@
-import cv2
+import time
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
@@ -239,7 +239,7 @@ def get_rot(pose3d):
     return rot_hip, rot_leg_l, rot_leg_r
 
 
-def sendToSteamVR(text):
+def sendToSteamVR_(text):
     #Function to send a string to my steamvr driver through a named pipe.
     #open pipe -> send string -> read string -> close pipe
     #sometimes, something along that pipeline fails for no reason, which is why the try catch is needed.
@@ -257,3 +257,19 @@ def sendToSteamVR(text):
     pipe.close()
     
     return array
+
+
+def sendToSteamVR(text, num_tries=10, wait_time=1):
+    ret = sendToSteamVR_(text)
+    i = 0
+    while "error" in ret:
+        print("Error while connecting to SteamVR. Retrying...")
+        time.sleep(wait_time)
+        ret = sendToSteamVR_(text)
+        i += 1
+        if i >= num_tries:
+            return None
+    
+    return ret
+
+    

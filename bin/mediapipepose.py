@@ -70,6 +70,16 @@ def camera_thread_fun(params):
             return
 
 
+def shutdown(params):
+    # first save parameters 
+    print("Saving parameters...")
+    params.save_params()
+
+    cv2.destroyAllWindows()
+    print("Exiting... You can close the window after 10 seconds.")
+    exit(0)
+
+
 camera_thread = threading.Thread(target=camera_thread_fun, args=(params,), daemon=True)
 camera_thread.start()      #start our thread, which starts camera capture
 
@@ -82,20 +92,9 @@ if use_steamvr:
     #ask the driver, how many devices are connected to ensure we dont add additional trackers 
     #in case we restart the program
     numtrackers = sendToSteamVR("numtrackers")
-    for i in range(10):
-        if "error" in numtrackers:
-            print("Error while connecting to SteamVR. Retrying...")
-            time.sleep(1)
-            numtrackers = sendToSteamVR("numtrackers")
-        else:
-            break
-            
-    if "error" in numtrackers:
+    if numtrackers is None:
         print("[ERROR]Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
-        print("Saving parameters...")
-        params.save_params()
-        print("Exiting... You can close the window after 10 seconds.")
-        exit(0)
+        shutdown(params)
         
     numtrackers = int(numtrackers[2])
  
@@ -121,19 +120,15 @@ for i in range(len(roles),totaltrackers):
 if use_steamvr:
     for i in range(numtrackers,totaltrackers):
         #sending addtracker to our driver will... add a tracker. to our driver.
-        resp = sendToSteamVR(f"addtracker MediaPipeTracker{i} {roles[i]}")
-        while "error" in resp:
-            resp = sendToSteamVR(f"addtracker MediaPipeTracker{i} {roles[i]}")
-            print(resp)
-            time.sleep(0.2)
-        time.sleep(0.2)
+        resp = sendToSteamVR(f"addtracker MediaPipeTracker{i} {roles[i]}", wait_time=0.2)
+        if resp is None:
+            print("[ERROR]Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+            shutdown(params)
     
     resp = sendToSteamVR(f"settings 50 {params.smoothing} {params.additional_smoothing}")
-    while "error" in resp:
-        resp = sendToSteamVR(f"settings 50 {params.smoothing} {params.additional_smoothing}")
-        print(resp)
-        time.sleep(1)
-
+    if resp is None:
+        print("[ERROR]Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+        shutdown(params)
 
 print("Starting pose detector...")
 
@@ -143,16 +138,6 @@ pose = mp_pose.Pose(                #create our detector. These are default para
     min_tracking_confidence=params.min_tracking_confidence,
     smooth_landmarks=params.smooth_landmarks,
     static_image_mode=params.static_image) 
-  
-
-def shutdown():
-    # first save parameters 
-    print("Saving parameters...")
-    params.save_params()
-
-    cv2.destroyAllWindows()
-    print("Exiting... You can close the window after 10 seconds.")
-    exit(0)
 
 cv2.namedWindow("out")
 
@@ -167,7 +152,7 @@ prev_add_smoothing = params.additional_smoothing
 while(True):
     # Capture frame-by-frame
     if params.exit_ready:
-        shutdown()
+        shutdown(params)
         
     if prev_smoothing != params.smoothing or prev_add_smoothing != params.additional_smoothing:
         print(f"Changed smoothing value from {prev_smoothing} to {params.smoothing}")
@@ -178,10 +163,9 @@ while(True):
 
         if use_steamvr:
             resp = sendToSteamVR(f"settings 50 {params.smoothing} {params.additional_smoothing}")
-            while "error" in resp:
-                resp = sendToSteamVR(f"settings 50 {params.smoothing} {params.additional_smoothing}")
-                print(resp)
-                time.sleep(1)
+            if resp is None:
+                print("[ERROR]Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+                shutdown(params)
     
     if not image_ready:     #wait untill camera thread captures another image
         time.sleep(0.001)
@@ -241,11 +225,17 @@ while(True):
         
         if use_steamvr:
             array = sendToSteamVR("getdevicepose 0")        #get hmd data to allign our skeleton to
+            if array is None:
+                print("[ERROR]Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+                shutdown(params)
 
-            if "error" in array:    #continue to next iteration if there is an error
-                continue
-
-            headsetpos = [float(array[3]),float(array[4]),float(array[5])]
+            #if "error" in array:    #continue to next iteration if there is an error
+            #    continue
+            try:
+                headsetpos = [float(array[3]),float(array[4]),float(array[5])]
+            except:
+                print(f"no error but this:")
+                print(array)
             headsetrot = R.from_quat([float(array[7]),float(array[8]),float(array[9]),float(array[6])])
             
             neckoffset = headsetrot.apply(params.hmd_to_neck_offset)   #the neck position seems to be the best point to allign to, as its well defined on 
@@ -264,25 +254,36 @@ while(True):
                         for i in [(0,1),(5,2),(6,0)]:
                             joint = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
                             if use_steamvr:
-                                sendToSteamVR(f"updatepose {i[1]} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} {params.camera_latency} 0.8") 
+                                resp = sendToSteamVR(f"updatepose {i[1]} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} {params.camera_latency} 0.8") 
+                                if resp is None:
+                                    print("[ERROR]Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+                                    shutdown(params)
                     else:
                         for i in [(0,1),(5,2)]:
                             joint = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
                             if use_steamvr:
-                                sendToSteamVR(f"updatepose {i[1]} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} {params.camera_latency} 0.8") 
+                                resp = sendToSteamVR(f"updatepose {i[1]} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} {params.camera_latency} 0.8") 
+                                if resp is None:
+                                    print("[ERROR]Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+                                    shutdown(params)
                             numadded = 2
                     if params.use_hands:
                         for i in [(10,0),(15,1)]:
                             joint = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
                             if use_steamvr:
-                                sendToSteamVR(f"updatepose {i[1]+numadded} {joint[0]} {joint[1]} {joint[2]} {hand_rots[i[1]][3]} {hand_rots[i[1]][0]} {hand_rots[i[1]][1]} {hand_rots[i[1]][2]} {params.camera_latency} 0.8") 
-                    
+                                resp = sendToSteamVR(f"updatepose {i[1]+numadded} {joint[0]} {joint[1]} {joint[2]} {hand_rots[i[1]][3]} {hand_rots[i[1]][0]} {hand_rots[i[1]][1]} {hand_rots[i[1]][2]} {params.camera_latency} 0.8") 
+                                if resp is None:
+                                    print("[ERROR]Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+                                    shutdown(params)
                     
                 else:
                     for i in range(23):
                         joint = pose3d[i] - offset      #if previewing skeleton, send the position of each keypoint to steamvr without rotation
                         if use_steamvr:
-                            sendToSteamVR(f"updatepose {i} {joint[0]} {joint[1]} {joint[2] - 2} 1 0 0 0 {params.camera_latency} 0.8") 
+                            resp = sendToSteamVR(f"updatepose {i} {joint[0]} {joint[1]} {joint[2] - 2} 1 0 0 0 {params.camera_latency} 0.8") 
+                            if resp is None:
+                                print("[ERROR]Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+                                shutdown(params)
     
     
     #print(f"Inference time: {time.time()-t0}\nSmoothing value: {smoothing}\n")        #print how long it took to detect and calculate everything
