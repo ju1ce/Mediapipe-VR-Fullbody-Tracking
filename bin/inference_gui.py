@@ -99,6 +99,8 @@ class InferenceWindow(tk.Frame):
         # exit
         tk.Button(self.root, text='Press to exit', command=self.params.ready2exit).pack()
 
+        root.protocol("WM_DELETE_WINDOW", self.params.ready2exit)
+
         #self.root.after(0, self.set_rot_y_var)
         #self.root.after(0, self.set_rot_x_var)
           

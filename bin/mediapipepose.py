@@ -24,13 +24,16 @@ use_steamvr = True
 print("Reading parameters...")
 
 params = parameters.Parameters()
+if params.exit_ready:
+    print("Exiting... You can close the window after 10 seconds.")
+    exit(0)
 
 print("Opening camera...")
 
 image_from_thread = None
 image_ready = False
 
-def camera_thread_fun():
+def camera_thread_fun(params):
     #A seperate camera thread that captures images and saves it to a variable to be read by the main program.
     #Mostly used to free the main thread from image decoding overhead and to ensure frames are just skipped if detection is slower than camera fps
     global cameraid, image_from_thread, image_ready
@@ -61,14 +64,17 @@ def camera_thread_fun():
 
         image_ready = True
         
-        assert ret, "Camera capture failed! Check the CameraID parameter."
+        if ret == 0:
+            print("[ERROR]Camera capture failed! Check the CameraID parameter.")
+            params.exit_ready = True
+            return
 
-camera_thread = threading.Thread(target=camera_thread_fun, daemon=True)
+
+camera_thread = threading.Thread(target=camera_thread_fun, args=(params,), daemon=True)
 camera_thread.start()      #start our thread, which starts camera capture
 
 gui_thread = threading.Thread(target=inference_gui.make_inference_gui, args=(params,), daemon=True)
 gui_thread.start()
-
 
 if use_steamvr:
     print("Connecting to SteamVR")
@@ -85,10 +91,12 @@ if use_steamvr:
             break
             
     if "error" in numtrackers:
-        print("Could not connect to SteamVR after 10 tries!")
-        time.sleep(10)
-        assert 0, "Could not connect to SteamVR after 10 tries"
- 
+        print("[ERROR]Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+        print("Saving parameters...")
+        params.save_params()
+        print("Exiting... You can close the window after 10 seconds.")
+        exit(0)
+        
     numtrackers = int(numtrackers[2])
  
 #games use 3 trackers, but we can also send the entire skeleton if we want to look at how it works

@@ -62,6 +62,13 @@ def getparams():
         param["advanced"] = False
        
     window = tk.Tk()
+    close = [False]
+
+    def on_close(close):
+        close[0] = True
+        window.destroy()
+
+    window.protocol("WM_DELETE_WINDOW", lambda x=close: on_close(x))
 
     tk.Label(text="Camera IP or ID:", width = 50).pack()
     camid = tk.Entry(width = 50)
@@ -151,6 +158,9 @@ def getparams():
     tk.Button(text='Save and Continue', command=window.quit).pack()
 
     window.mainloop()
+
+    if close[0]:
+        return "shutdown"
 
     cameraid = camid.get()
     #hmd_to_neck_offset = [float(val) for val in hmdoffsettext.get().split(" ")]

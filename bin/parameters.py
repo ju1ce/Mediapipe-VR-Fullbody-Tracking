@@ -8,6 +8,9 @@ class Parameters():
         param = None
         while param == None:
             param = getparams()
+            if param == "shutdown":
+                self.exit_ready = True  
+                return
         
         self.advanced = param["advanced"]
         
@@ -74,7 +77,7 @@ class Parameters():
         
         #self.prev_smoothing = self.smoothing
     
-    
+
     def change_recalibrate(self):
         self.recalibrate = True
 
