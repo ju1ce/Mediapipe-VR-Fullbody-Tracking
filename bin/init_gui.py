@@ -1,6 +1,5 @@
 import tkinter as tk
 import pickle
-import cv2
 
 def set_advanced(window,param):
     param["switch_advanced"] = True
@@ -97,55 +96,9 @@ def getparams():
 
     tk.Label(text="-"*50, width = 50).pack()
 
-    if False:
-
-        tk.Label(text="Offset of HMD to neck:", width = 50).pack()
-        hmdoffsettext = tk.Entry(width = 50)
-        hmdoffsettext.pack()
-        hmdoffsettext.insert(0," ".join(map(str,param["neckoffset"])))
-    
-    if False:
-        tk.Label(text="Smoothing:", width = 50).pack()
-        smoothingtext = tk.Entry(width = 50)
-        smoothingtext.pack()
-        smoothingtext.insert(0,param["smooth"])
-        
-        tk.Label(text="Camera latency:", width = 50).pack()
-        camlatencytext = tk.Entry(width = 50)
-        camlatencytext.pack()
-        camlatencytext.insert(0,param["camlatency"])
-
-    """
-    varhmdwait = tk.IntVar(value = param["waithmd"])
-    hmdwait_check = tk.Checkbutton(text = "Dont wait for hmd", variable = varhmdwait)
-    hmdwait_check.pack()
-    """
-    if False:
-        varclock = tk.IntVar(value = param["rotateclock"])
-        rot_clock_check = tk.Checkbutton(text = "Rotate camera clockwise", variable = varclock)
-        rot_clock_check.pack()
-
-        varcclock = tk.IntVar(value = param["rotatecclock"])
-        rot_cclock_check = tk.Checkbutton(text = "Rotate camera counter clockwise", variable = varcclock)
-        rot_cclock_check.pack()
-    
     varfeet = tk.IntVar(value = param["feetrot"])
     rot_feet_check = tk.Checkbutton(text = "Enable experimental foot rotation", variable = varfeet)
     rot_feet_check.pack()
-
-    if False:
-    
-        varscale = tk.IntVar(value = param["calib_scale"])
-        scale_check = tk.Checkbutton(text = "Enable automatic scale calibration", variable = varscale)
-        scale_check.pack()
-        
-        vartilt = tk.IntVar(value = param["calib_tilt"])
-        tilt_check = tk.Checkbutton(text = "Enable automatic tilt calibration", variable = vartilt)
-        tilt_check.pack()
-    
-        varrot = tk.IntVar(value = param["calib_rot"])
-        rot_check = tk.Checkbutton(text = "Enable automatic rotation calibration", variable = varrot)
-        rot_check.pack()
     
     if not param["advanced"]:
         tk.Label(text="NOTE: VRChat requires a hip tracker. Only disable it if you \nuse another software for hip tracking, such as owoTrack.", width = 55).pack()

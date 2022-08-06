@@ -1,9 +1,7 @@
 print("Importing libraries...")
 
-from math import degrees
 import os
 import sys
-from turtle import width
 
 sys.path.append(os.getcwd())    #embedable python doesnt find local modules without this line
 
@@ -11,7 +9,7 @@ import time
 import threading
 import cv2
 import numpy as np
-from helpers import mediapipeTo3dpose, get_rot_mediapipe, get_rot_hands, draw_pose, keypoints_to_original, normalize_screen_coordinates, get_rot, sendToSteamVR
+from helpers import mediapipeTo3dpose, get_rot_mediapipe, get_rot_hands, keypoints_to_original, normalize_screen_coordinates, get_rot, sendToSteamVR
 from scipy.spatial.transform import Rotation as R
 
 import inference_gui
@@ -47,8 +45,7 @@ def camera_thread_fun():
     else:
         cameraid = params.cameraid
         cap = cv2.VideoCapture(cameraid)  
-     
-   
+    
     #codec = 0x47504A4D
     #cap.set(cv2.CAP_PROP_FOURCC, codec)
     

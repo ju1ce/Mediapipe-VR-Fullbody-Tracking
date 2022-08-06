@@ -2,59 +2,9 @@ import cv2
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-# Dictionary that maps from joint names to keypoint indices.
-KEYPOINT_DICT = {
-    'nose': 0,
-    'left_eye': 1,
-    'right_eye': 2,
-    'left_ear': 3,
-    'right_ear': 4,
-    'left_shoulder': 5,
-    'right_shoulder': 6,
-    'left_elbow': 7,
-    'right_elbow': 8,
-    'left_wrist': 9,
-    'right_wrist': 10,
-    'left_hip': 11,
-    'right_hip': 12,
-    'left_knee': 13,
-    'right_knee': 14,
-    'left_ankle': 15,
-    'right_ankle': 16
-}
-
-EDGES = [
-    (0, 1),
-    (0, 2),
-    (1, 3),
-    (2, 4),
-    (0, 5),
-    (0, 6),
-    (5, 7),
-    (7, 9),
-    (6, 8),
-    (8, 10),
-    (5, 6),
-    (5, 11),
-    (6, 12),
-    (11, 12),
-    (11, 13),
-    (13, 15),
-    (12, 14),
-    (14, 16)
-]
-
-skeleton3d = ((0,1),(1,2),(5,4),(4,3),(2,6),(3,6),(6,16),(16,7),(7,8),(8,9),(7,12),(7,13),(10,11),(11,12),(15,14),(14,13)) #head is 9, one hand is 10, other is 15
-
-
-def draw_pose(frame,pose,size):
-    pose = pose*size
-    for sk in EDGES:
-        cv2.line(frame,(int(pose[sk[0],1]),int(pose[sk[0],0])),(int(pose[sk[1],1]),int(pose[sk[1],0])),(0,255,0),3)
-
 
 def mediapipeTo3dpose(lms):
-    
+    #33 pose landmarks as in https://google.github.io/mediapipe/solutions/pose.html#pose-landmark-model-blazepose-ghum-3d
     #convert landmarks returned by mediapipe to skeleton that I use.
     #lms = results.pose_world_landmarks.landmark
     
@@ -110,13 +60,9 @@ def mediapipeTo3dpose(lms):
 def keypoints_to_original(scale,center,points):
     scores = points[:,2]
     points -= 0.5
-    #print(scale,center)
-    #print(points)
     points *= scale
-    #print(points)
     points[:,0] += center[0]
     points[:,1] += center[1]
-    #print(points)
     
     points[:,2] = scores
     
@@ -228,7 +174,6 @@ def get_rot_mediapipe(pose3d):
     return hip_rot, r_foot_rot, l_foot_rot
 
     
-
 def get_rot(pose3d):
 
     ## guesses
@@ -306,6 +251,7 @@ def sendToSteamVR(text):
         resp = pipe.read(1024)
     except:
         return ["error"]
+
     string = resp.decode("utf-8")
     array = string.split(" ")
     pipe.close()

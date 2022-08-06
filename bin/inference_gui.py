@@ -373,7 +373,6 @@ class InferenceWindow(tk.Frame):
             
             self.params.rot_change_y(value * 57.295779513)
             
-
             #angle = self.params.global_rot_y.as_euler('zyx', degrees=True)
             #print("angle from rot = ", -(180+angle[1]), "whole:",angle)
             

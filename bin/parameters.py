@@ -17,7 +17,6 @@ class Parameters():
         self.static_image = param["static_image"]
 
         #PARAMETERS:
-        #model =  1          #TODO: add parameter for which model size to use
         self.maximgsize = param["imgsize"]               #to prevent working with huge images, images that have one axis larger than this value will be downscaled.
         self.cameraid = param["camid"]                    #to use with an usb or virtual webcam. If 0 doesnt work/opens wrong camera, try numbers 1-5 or so
         #cameraid = "http://192.168.1.102:8080/video"   #to use ip webcam, uncomment this line and change to your ip
@@ -25,8 +24,6 @@ class Parameters():
         self.preview_skeleton = param["prevskel"]             #if True, whole skeleton will appear in vr 2 meters in front of you. Good to visualize if everything is working
         self.dont_wait_hmd = param["waithmd"]                  #dont wait for movement from hmd, start inference immediately.
         self.rotate_image = 0 # cv2.ROTATE_90_CLOCKWISE # cv2.ROTATE_90_COUTERCLOCKWISE # cv2.ROTATE_180 # None # if you want, rotate the camera
-        #self.camera_latency = param["camlatency"]
-        #self.smoothing = param["smooth"]
         self.camera_latency = 0.1
         self.smoothing_1 = 0.5
         self.additional_smoothing_1 = 0
@@ -77,6 +74,7 @@ class Parameters():
         
         #self.prev_smoothing = self.smoothing
     
+    
     def change_recalibrate(self):
         self.recalibrate = True
 
@@ -92,6 +90,7 @@ class Parameters():
         self.euler_rot_x = value
         self.global_rot_x = R.from_euler('x',value-90,degrees=True) 
         
+
     def rot_change_z(self, value):
         print(f"Changed z rotation value to {value}")
         self.euler_rot_z = value
@@ -118,6 +117,7 @@ class Parameters():
         if paramid == 2:
             self.smoothing_2 = val
         
+
     def change_additional_smoothing(self, val, paramid = 0):
         print(f"Changed additional smoothing value to {val}")
         self.additional_smoothing = val
@@ -127,9 +127,11 @@ class Parameters():
         if paramid == 2:
             self.additional_smoothing_2 = val
 
+
     def change_camera_latency(self, val):
         print(f"Changed camera latency to {val}")
         self.camera_latency = val
+
 
     def change_neck_offset(self,x,y,z):
         print(f"Hmd to neck offset changed to: [{x},{y},{z}]")
@@ -139,8 +141,10 @@ class Parameters():
         print(f"Image mirror set to {mirror}")
         self.mirror = mirror
 
+
     def ready2exit(self):
         self.exit_ready = True
+
 
     def save_params(self):
         param = {}
@@ -172,6 +176,7 @@ class Parameters():
         
         with open("saved_params.json", "w") as f:
             json.dump(param, f)
+
 
     def load_params(self):
 
@@ -206,7 +211,6 @@ class Parameters():
         except:
             print("Save file not found, will be created after you exit the program.")
  
-
 
 if __name__ == "__main__":
     print("hehe")
