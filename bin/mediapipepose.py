@@ -9,7 +9,7 @@ import time
 import threading
 import cv2
 import numpy as np
-from helpers import mediapipeTo3dpose, get_rot_mediapipe, get_rot_hands, keypoints_to_original, normalize_screen_coordinates, get_rot, sendToSteamVR
+from helpers import CameraStream, mediapipeTo3dpose, get_rot_mediapipe, get_rot_hands, get_rot, sendToSteamVR
 from scipy.spatial.transform import Rotation as R
 
 import inference_gui
@@ -17,6 +17,15 @@ import parameters
 
 import mediapipe as mp
 
+
+def shutdown(params):
+        # first save parameters 
+        print("Saving parameters...")
+        params.save_params()
+
+        cv2.destroyAllWindows()
+        sys.exit("Exiting... You can close the window after 10 seconds.")
+        
 
 def main():
     mp_drawing = mp.solutions.drawing_utils
@@ -28,76 +37,27 @@ def main():
 
     params = parameters.Parameters()
     if params.exit_ready:
-        print("Exiting... You can close the window after 10 seconds.")
-        return
+        sys.exit("Exiting... You can close the window after 10 seconds.")
 
     print("Opening camera...")
 
-    image_from_thread = None
-    image_ready = False
-
-    def camera_thread_fun(params):
-        #A seperate camera thread that captures images and saves it to a variable to be read by the main program.
-        #Mostly used to free the main thread from image decoding overhead and to ensure frames are just skipped if detection is slower than camera fps
-        global cameraid, image_from_thread, image_ready
-        
-        if len(params.cameraid) <= 2:
-            cameraid = int(params.cameraid)
-            if params.camera_settings:
-                cap = cv2.VideoCapture(cameraid, cv2.CAP_DSHOW) # check if opened??
-                cap.set(cv2.CAP_PROP_SETTINGS, 1)
-            else:
-                cap = cv2.VideoCapture(cameraid)   
-        else:
-            cameraid = params.cameraid
-            cap = cv2.VideoCapture(cameraid, cv2.CAP_DSHOW)  
-        
-        #codec = 0x47504A4D
-        #cap.set(cv2.CAP_PROP_FOURCC, codec)
-        
-        if params.camera_height != 0:
-            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(params.camera_height))
-            
-        if params.camera_width != 0:
-            cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(params.camera_width))
-            
-        print("Camera opened!")
-        while True:
-            ret, image_from_thread = cap.read()    
-
-            image_ready = True
-            
-            if ret == 0:
-                print("[ERROR]Camera capture failed! Check the CameraID parameter.")
-                params.exit_ready = True
-                break
-
-
-    def shutdown(params):
-        # first save parameters 
-        print("Saving parameters...")
-        params.save_params()
-
-        cv2.destroyAllWindows()
-        print("Exiting... You can close the window after 10 seconds.")
-
-
-    camera_thread = threading.Thread(target=camera_thread_fun, args=(params,), daemon=True)
-    camera_thread.start()      #start our thread, which starts camera capture
+    try:
+        camera_thread = CameraStream(params)
+    except:
+        print("ERROR: Could not open camera, try another id/IP")
+        shutdown(params)
 
     gui_thread = threading.Thread(target=inference_gui.make_inference_gui, args=(params,), daemon=True)
     gui_thread.start()
 
     if use_steamvr:
         print("Connecting to SteamVR")
-        
         #ask the driver, how many devices are connected to ensure we dont add additional trackers 
         #in case we restart the program
         numtrackers = sendToSteamVR("numtrackers")
         if numtrackers is None:
-            print("[ERROR]Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+            print("ERROR: Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
             shutdown(params)
-            return
             
         numtrackers = int(numtrackers[2])
     
@@ -125,15 +85,13 @@ def main():
             #sending addtracker to our driver will... add a tracker. to our driver.
             resp = sendToSteamVR(f"addtracker MediaPipeTracker{i} {roles[i]}", wait_time=0.2)
             if resp is None:
-                print("[ERROR]Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+                print("ERROR: Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
                 shutdown(params)
-                return
         
         resp = sendToSteamVR(f"settings 50 {params.smoothing} {params.additional_smoothing}")
         if resp is None:
-            print("[ERROR]Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+            print("ERROR: Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
             shutdown(params)
-            return
 
     print("Starting pose detector...")
 
@@ -148,7 +106,6 @@ def main():
 
     #Main program loop:
 
-    rotation = 0
     i = 0
 
     prev_smoothing = params.smoothing
@@ -170,18 +127,18 @@ def main():
             if use_steamvr:
                 resp = sendToSteamVR(f"settings 50 {params.smoothing} {params.additional_smoothing}")
                 if resp is None:
-                    print("[ERROR]Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+                    print("ERROR: Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
                     shutdown(params)
                     return
         
         #wait untill camera thread captures another image
-        if not image_ready:     
+        if not camera_thread.image_ready:     
             time.sleep(0.001)
             continue
 
         #some may say I need a mutex here. I say this works fine.
-        img = image_from_thread.copy() 
-        image_ready = False         
+        img = camera_thread.image_from_thread.copy() 
+        camera_thread.image_ready = False         
         
         #if set, rotate the image
         if params.rotate_image is not None:       
@@ -193,14 +150,14 @@ def main():
         #if set, ensure image does not exceed the given size.
         if max(img.shape) > params.maximgsize:        
             ratio = max(img.shape)/params.maximgsize
-            img = cv2.resize(img,(int(img.shape[1]/ratio),int(img.shape[0]/ratio)))
+            img = cv2.resize(img, (int(img.shape[1]/ratio),int(img.shape[0]/ratio)))
         
         if params.paused:
-            cv2.imshow("out",img)
+            cv2.imshow("out", img)
             cv2.waitKey(1)
             continue
         
-        img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         #print(image.shape)
         
@@ -237,9 +194,8 @@ def main():
             if use_steamvr:
                 array = sendToSteamVR("getdevicepose 0")        #get hmd data to allign our skeleton to
                 if array is None:
-                    print("[ERROR]Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+                    print("ERROR: Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
                     shutdown(params)
-                    return
 
                 #if "error" in array:    #continue to next iteration if there is an error
                 #    continue
@@ -268,18 +224,16 @@ def main():
                                 if use_steamvr:
                                     resp = sendToSteamVR(f"updatepose {i[1]} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} {params.camera_latency} 0.8") 
                                     if resp is None:
-                                        print("[ERROR]Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+                                        print("ERROR: Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
                                         shutdown(params)
-                                        return
                         else:
                             for i in [(0,1),(5,2)]:
                                 joint = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
                                 if use_steamvr:
                                     resp = sendToSteamVR(f"updatepose {i[1]} {joint[0]} {joint[1]} {joint[2]} {rots[i[1]][3]} {rots[i[1]][0]} {rots[i[1]][1]} {rots[i[1]][2]} {params.camera_latency} 0.8") 
                                     if resp is None:
-                                        print("[ERROR]Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+                                        print("ERROR: Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
                                         shutdown(params)
-                                        return
                                 numadded = 2
                         if params.use_hands:
                             for i in [(10,0),(15,1)]:
@@ -287,9 +241,8 @@ def main():
                                 if use_steamvr:
                                     resp = sendToSteamVR(f"updatepose {i[1]+numadded} {joint[0]} {joint[1]} {joint[2]} {hand_rots[i[1]][3]} {hand_rots[i[1]][0]} {hand_rots[i[1]][1]} {hand_rots[i[1]][2]} {params.camera_latency} 0.8") 
                                     if resp is None:
-                                        print("[ERROR]Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+                                        print("ERROR: Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
                                         shutdown(params)
-                                        return
                         
                     else:
                         for i in range(23):
@@ -297,9 +250,8 @@ def main():
                             if use_steamvr:
                                 resp = sendToSteamVR(f"updatepose {i} {joint[0]} {joint[1]} {joint[2] - 2} 1 0 0 0 {params.camera_latency} 0.8") 
                                 if resp is None:
-                                    print("[ERROR]Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+                                    print("ERROR: Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
                                     shutdown(params)
-                                    return
         
         
         #print(f"Inference time: {time.time()-t0}\nSmoothing value: {smoothing}\n")        #print how long it took to detect and calculate everything

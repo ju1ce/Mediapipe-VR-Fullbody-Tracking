@@ -1,6 +1,8 @@
 import time
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+import cv2
+import threading
 
 
 def mediapipeTo3dpose(lms):
@@ -260,6 +262,7 @@ def sendToSteamVR_(text):
 
 
 def sendToSteamVR(text, num_tries=10, wait_time=1):
+    # wrapped function sendToSteamVR that detects failed connections
     ret = sendToSteamVR_(text)
     i = 0
     while "error" in ret:
@@ -268,8 +271,49 @@ def sendToSteamVR(text, num_tries=10, wait_time=1):
         ret = sendToSteamVR_(text)
         i += 1
         if i >= num_tries:
-            return None
+            return None # probably better to throw error here and exit the program (assert?)
     
     return ret
 
     
+class CameraStream():
+    def __init__(self, params):
+        self.params = params
+        self.image_ready = False
+        # setup camera capture
+        if len(params.cameraid) <= 2:
+            cameraid = int(params.cameraid)
+        else:
+            cameraid = params.cameraid
+            
+        if params.camera_settings: # use advanced settings
+            self.cap = cv2.VideoCapture(cameraid, cv2.CAP_DSHOW) 
+            self.cap.set(cv2.CAP_PROP_SETTINGS, 1)
+        else:
+            self.cap = cv2.VideoCapture(cameraid)  
+
+        if not self.cap.isOpened():
+            assert 0
+
+        if params.camera_height != 0:
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(params.camera_height))
+            
+        if params.camera_width != 0:
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(params.camera_width))
+
+        print("Start camera thread")
+        self.thread = threading.Thread(target=self.update, args=(), daemon=True)
+        self.thread.start()
+
+    
+    def update(self):
+        # continuously grab images
+        while True:
+            ret, self.image_from_thread = self.cap.read()    
+            self.image_ready = True
+            
+            if ret == 0:
+                print("ERROR: Camera capture failed! Check the CameraID parameter.")
+                self.params.exit_ready = True
+                return
+ 
