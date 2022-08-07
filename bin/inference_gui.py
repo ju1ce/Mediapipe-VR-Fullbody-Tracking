@@ -305,7 +305,7 @@ class InferenceWindow(tk.Frame):
         if use_steamvr:
             array = sendToSteamVR("getdevicepose 0")        #get hmd data to allign our skeleton to
 
-            if array is None:    #continue to next iteration if there is an error
+            if array is None or len(array) < 10:
                 shutdown(self.params)
 
             headsetpos = [float(array[3]),float(array[4]),float(array[5])]
@@ -315,7 +315,11 @@ class InferenceWindow(tk.Frame):
                                                             #the skeleton (unlike the eyes/nose, which jump around) and can be calculated from hmd.   
 
         if self.params.calib_tilt:
-            feet_middle = (self.params.pose3d_og[0] + self.params.pose3d_og[5])/2
+            try:
+                feet_middle = (self.params.pose3d_og[0] + self.params.pose3d_og[5])/2
+            except:
+                print("INFO: No pose detected, try to autocalibrate again.")
+                return
         
             print(feet_middle)
         

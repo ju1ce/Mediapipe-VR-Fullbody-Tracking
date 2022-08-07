@@ -8,9 +8,6 @@ class Parameters():
         param = None
         while param == None:
             param = getparams()
-            if param == "shutdown":
-                self.exit_ready = True  
-                return
         
         self.advanced = param["advanced"]
         

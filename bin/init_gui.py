@@ -1,4 +1,5 @@
 import tkinter as tk
+import sys
 import pickle
 
 def set_advanced(window,param):
@@ -62,13 +63,12 @@ def getparams():
         param["advanced"] = False
        
     window = tk.Tk()
-    close = [False]
 
-    def on_close(close):
-        close[0] = True
+    def on_close():
         window.destroy()
+        sys.exit("INFO: Exiting... You can close the window after 10 seconds.")
 
-    window.protocol("WM_DELETE_WINDOW", lambda x=close: on_close(x))
+    window.protocol("WM_DELETE_WINDOW", on_close)
 
     tk.Label(text="Camera IP or ID:", width = 50).pack()
     camid = tk.Entry(width = 50)
@@ -158,9 +158,6 @@ def getparams():
     tk.Button(text='Save and Continue', command=window.quit).pack()
 
     window.mainloop()
-
-    if close[0]:
-        return "shutdown"
 
     cameraid = camid.get()
     #hmd_to_neck_offset = [float(val) for val in hmdoffsettext.get().split(" ")]

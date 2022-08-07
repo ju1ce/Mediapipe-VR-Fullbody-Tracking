@@ -315,7 +315,7 @@ class CameraStream():
             self.image_ready = True
             
             if ret == 0:
-                print("ERROR: Camera capture failed! Check the CameraID parameter.")
+                print("ERROR: Camera capture failed! missed frames.")
                 self.params.exit_ready = True
                 return
  
