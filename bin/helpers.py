@@ -3,6 +3,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 import cv2
 import threading
+import sys
 
 
 def mediapipeTo3dpose(lms):
@@ -266,7 +267,7 @@ def sendToSteamVR(text, num_tries=10, wait_time=1):
     ret = sendToSteamVR_(text)
     i = 0
     while "error" in ret:
-        print("Error while connecting to SteamVR. Retrying...")
+        print("INFO: Error while connecting to SteamVR. Retrying...")
         time.sleep(wait_time)
         ret = sendToSteamVR_(text)
         i += 1
@@ -293,7 +294,8 @@ class CameraStream():
             self.cap = cv2.VideoCapture(cameraid)  
 
         if not self.cap.isOpened():
-            assert 0
+            print("ERROR: Could not open camera, try another id/IP")
+            shutdown(params)
 
         if params.camera_height != 0:
             self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(params.camera_height))
@@ -301,7 +303,7 @@ class CameraStream():
         if params.camera_width != 0:
             self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(params.camera_width))
 
-        print("Start camera thread")
+        print("INFO: Start camera thread")
         self.thread = threading.Thread(target=self.update, args=(), daemon=True)
         self.thread.start()
 
@@ -317,3 +319,11 @@ class CameraStream():
                 self.params.exit_ready = True
                 return
  
+
+def shutdown(params):
+    # first save parameters 
+    print("INFO: Saving parameters...")
+    params.save_params()
+
+    cv2.destroyAllWindows()
+    sys.exit("INFO: Exiting... You can close the window after 10 seconds.")

@@ -83,36 +83,36 @@ class Parameters():
 
 
     def rot_change_y(self, value):                                  #callback functions. Whenever the value on sliders are changed, they are called
-        print(f"Changed y rotation value to {value}")
+        print(f"INFO: Changed y rotation value to {value}")
         self.euler_rot_y = value
         self.global_rot_y = R.from_euler('y',value,degrees=True)     #and the rotation is updated with the new value.
         
 
     def rot_change_x(self, value):
-        print(f"Changed x rotation value to {value}")
+        print(f"INFO: Changed x rotation value to {value}")
         self.euler_rot_x = value
         self.global_rot_x = R.from_euler('x',value-90,degrees=True) 
         
 
     def rot_change_z(self, value):
-        print(f"Changed z rotation value to {value}")
+        print(f"INFO: Changed z rotation value to {value}")
         self.euler_rot_z = value
         self.global_rot_z = R.from_euler('z',value-180,degrees=True) 
          
 
     def change_scale(self, value):
-        print(f"Changed scale value to {value}")
+        print(f"INFO: Changed scale value to {value}")
         #posescale = value/50 + 0.5
         self.posescale = value
 
 
     def change_img_rot(self, val):
-        print(f"Changed image rotation to {val*90} clockwise")
+        print(f"INFO: Changed image rotation to {val*90} clockwise")
         self.rotate_image = self.img_rot_dict[val]
 
 
     def change_smoothing(self, val, paramid = 0):
-        print(f"Changed smoothing value to {val}")
+        print(f"INFO: Changed smoothing value to {val}")
         self.smoothing = val
         
         if paramid == 1:
@@ -122,7 +122,7 @@ class Parameters():
         
 
     def change_additional_smoothing(self, val, paramid = 0):
-        print(f"Changed additional smoothing value to {val}")
+        print(f"INFO: Changed additional smoothing value to {val}")
         self.additional_smoothing = val
 
         if paramid == 1:
@@ -132,16 +132,16 @@ class Parameters():
 
 
     def change_camera_latency(self, val):
-        print(f"Changed camera latency to {val}")
+        print(f"INFO: Changed camera latency to {val}")
         self.camera_latency = val
 
 
     def change_neck_offset(self,x,y,z):
-        print(f"Hmd to neck offset changed to: [{x},{y},{z}]")
+        print(f"INFO: Hmd to neck offset changed to: [{x},{y},{z}]")
         self.hmd_to_neck_offset = [x,y,z]
 
     def change_mirror(self, mirror):
-        print(f"Image mirror set to {mirror}")
+        print(f"INFO: Image mirror set to {mirror}")
         self.mirror = mirror
 
 
@@ -212,7 +212,7 @@ class Parameters():
             
             self.flip = param["flip"]
         except:
-            print("Save file not found, will be created after you exit the program.")
+            print("INFO: Save file not found, will be created after you exit the program.")
  
 
 if __name__ == "__main__":

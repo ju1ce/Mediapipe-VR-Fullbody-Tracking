@@ -9,7 +9,7 @@ import time
 import threading
 import cv2
 import numpy as np
-from helpers import CameraStream, mediapipeTo3dpose, get_rot_mediapipe, get_rot_hands, get_rot, sendToSteamVR
+from helpers import CameraStream, shutdown, mediapipeTo3dpose, get_rot_mediapipe, get_rot_hands, get_rot, sendToSteamVR
 from scipy.spatial.transform import Rotation as R
 
 import inference_gui
@@ -18,40 +18,27 @@ import parameters
 import mediapipe as mp
 
 
-def shutdown(params):
-        # first save parameters 
-        print("Saving parameters...")
-        params.save_params()
-
-        cv2.destroyAllWindows()
-        sys.exit("Exiting... You can close the window after 10 seconds.")
-        
-
 def main():
     mp_drawing = mp.solutions.drawing_utils
     mp_pose = mp.solutions.pose
 
     use_steamvr = True
 
-    print("Reading parameters...")
+    print("INFO: Reading parameters...")
 
     params = parameters.Parameters()
     if params.exit_ready:
-        sys.exit("Exiting... You can close the window after 10 seconds.")
+        sys.exit("INFO: Exiting... You can close the window after 10 seconds.")
 
-    print("Opening camera...")
+    print("INFO: Opening camera...")
 
-    try:
-        camera_thread = CameraStream(params)
-    except:
-        print("ERROR: Could not open camera, try another id/IP")
-        shutdown(params)
+    camera_thread = CameraStream(params)
 
     gui_thread = threading.Thread(target=inference_gui.make_inference_gui, args=(params,), daemon=True)
     gui_thread.start()
 
     if use_steamvr:
-        print("Connecting to SteamVR")
+        print("INFO: Connecting to SteamVR")
         #ask the driver, how many devices are connected to ensure we dont add additional trackers 
         #in case we restart the program
         numtrackers = sendToSteamVR("numtrackers")
@@ -93,7 +80,7 @@ def main():
             print("ERROR: Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
             shutdown(params)
 
-    print("Starting pose detector...")
+    print("INFO: Starting pose detector...")
 
     #create our detector. These are default parameters as used in the tutorial. 
     pose = mp_pose.Pose(model_complexity=params.model, 
@@ -118,8 +105,8 @@ def main():
             return
             
         if prev_smoothing != params.smoothing or prev_add_smoothing != params.additional_smoothing:
-            print(f"Changed smoothing value from {prev_smoothing} to {params.smoothing}")
-            print(f"Changed additional smoothing from {prev_add_smoothing} to {params.additional_smoothing}")
+            print(f"INFO: Changed smoothing value from {prev_smoothing} to {params.smoothing}")
+            print(f"INFO: Changed additional smoothing from {prev_add_smoothing} to {params.additional_smoothing}")
             
             prev_smoothing = params.smoothing
             prev_add_smoothing = params.additional_smoothing
@@ -199,11 +186,9 @@ def main():
 
                 #if "error" in array:    #continue to next iteration if there is an error
                 #    continue
-                try:
-                    headsetpos = [float(array[3]),float(array[4]),float(array[5])]
-                except:
-                    print(f"no error but this:") # weird bug, happened only once
-                    print(array)
+
+                headsetpos = [float(array[3]),float(array[4]),float(array[5])] # once a bug where index out of bounds for array but is also not none??
+ 
                 headsetrot = R.from_quat([float(array[7]),float(array[8]),float(array[9]),float(array[6])])
                 
                 neckoffset = headsetrot.apply(params.hmd_to_neck_offset)   #the neck position seems to be the best point to allign to, as its well defined on 
@@ -258,7 +243,7 @@ def main():
         inference_time = time.time() - t0
         
         if params.log_frametime:
-            print(f"Inference time: {inference_time}")
+            print(f"INFO: Inference time: {inference_time}")
         
         img = cv2.cvtColor(img,cv2.COLOR_RGB2BGR)       #convert back to bgr and draw the pose
         mp_drawing.draw_landmarks(
@@ -268,7 +253,6 @@ def main():
         cv2.imshow("out", img)           #show image, exit program if we press esc
         if cv2.waitKey(1) == 27:
             shutdown(params)
-            return
 
 
 if __name__ == "__main__":
