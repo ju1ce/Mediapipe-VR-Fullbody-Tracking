@@ -102,7 +102,6 @@ def main():
         # Capture frame-by-frame
         if params.exit_ready:
             shutdown(params)
-            return
             
         if prev_smoothing != params.smoothing or prev_add_smoothing != params.additional_smoothing:
             print(f"INFO: Changed smoothing value from {prev_smoothing} to {params.smoothing}")
@@ -116,7 +115,6 @@ def main():
                 if resp is None:
                     print("ERROR: Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
                     shutdown(params)
-                    return
         
         #wait untill camera thread captures another image
         if not camera_thread.image_ready:     
@@ -180,22 +178,19 @@ def main():
             
             if use_steamvr:
                 array = sendToSteamVR("getdevicepose 0")        #get hmd data to allign our skeleton to
-                if array is None:
+                if array is None or len(array) < 10:
                     print("ERROR: Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
                     shutdown(params)
 
-                #if "error" in array:    #continue to next iteration if there is an error
-                #    continue
+                headsetpos = [float(array[3]),float(array[4]),float(array[5])] 
 
-                headsetpos = [float(array[3]),float(array[4]),float(array[5])] # once a bug where index out of bounds for array but is also not none??
- 
                 headsetrot = R.from_quat([float(array[7]),float(array[8]),float(array[9]),float(array[6])])
                 
                 neckoffset = headsetrot.apply(params.hmd_to_neck_offset)   #the neck position seems to be the best point to allign to, as its well defined on 
                                                                     #the skeleton (unlike the eyes/nose, which jump around) and can be calculated from hmd.   
 
                 if params.recalibrate:
-                    print("frame to recalibrate")
+                    print("INFO: frame to recalibrate")
                     
                 else:
                     pose3d = pose3d * params.posescale     #rescale skeleton to calibrated height

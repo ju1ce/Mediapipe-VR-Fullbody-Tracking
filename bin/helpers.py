@@ -262,7 +262,7 @@ def sendToSteamVR_(text):
     return array
 
 
-def sendToSteamVR(text, num_tries=10, wait_time=1):
+def sendToSteamVR(text, num_tries=10, wait_time=0.1):
     # wrapped function sendToSteamVR that detects failed connections
     ret = sendToSteamVR_(text)
     i = 0
