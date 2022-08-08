@@ -10,3 +10,5 @@ params.p
 env*
 dist*
 build*
+*.json
+*.zip

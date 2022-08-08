@@ -401,6 +401,10 @@ class InferenceWindow(tk.Frame):
         separator.pack(fill='x')
         
     def pause_tracking(self):
+        if not self.params.paused:
+            print("INFO: Pose estimation paused")
+        else:
+            print("INFO: Pose estimation unpaused") 
         self.params.paused = not self.params.paused
 
 
