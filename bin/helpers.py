@@ -1,5 +1,7 @@
+import socket
 import cv2
 import numpy as np
+from sys import platform
 from scipy.spatial.transform import Rotation as R
 
 # Dictionary that maps from joint names to keypoint indices.
@@ -294,21 +296,37 @@ def get_rot(pose3d):
     return rot_hip, rot_leg_l, rot_leg_r
 
 
+def sendToPipe(text):
+    if platform.startswith('win32'):
+        pipe = open(r'\\.\pipe\ApriltagPipeIn', 'rb+', buffering=0)
+        some_data = str.encode(text)
+        some_data += b'\0'
+        pipe.write(some_data)
+        resp = pipe.read(1024)
+        pipe.close()
+    elif platform.startswith('linux'):
+        client = socket.socket(socket.AF_UNIX, socket.SOCK_SEQPACKET)
+        client.connect("/tmp/ApriltagPipeIn")
+        some_data = text.encode('utf-8')
+        some_data += b'\0'
+        client.send(some_data)
+        resp = client.recv(1024)
+        client.close()
+    else:
+        print(f"Unsuported platform {sys.platform}")
+        raise Exception
+    return resp
+
 def sendToSteamVR(text):
     #Function to send a string to my steamvr driver through a named pipe.
     #open pipe -> send string -> read string -> close pipe
     #sometimes, something along that pipeline fails for no reason, which is why the try catch is needed.
     #returns an array containing the values returned by the driver.
     try:
-        pipe = open(r'\\.\pipe\ApriltagPipeIn', 'rb+', buffering=0)
-        some_data = str.encode(text)
-        some_data += b'\0'
-        pipe.write(some_data)
-        resp = pipe.read(1024)
+        resp = sendToPipe(text)
     except:
         return ["error"]
     string = resp.decode("utf-8")
     array = string.split(" ")
-    pipe.close()
     
     return array
