@@ -302,6 +302,7 @@ def sendToSteamVR(text):
     try:
         pipe = open(r'\\.\pipe\ApriltagPipeIn', 'rb+', buffering=0)
         some_data = str.encode(text)
+        some_data += b'\0'
         pipe.write(some_data)
         resp = pipe.read(1024)
     except:
