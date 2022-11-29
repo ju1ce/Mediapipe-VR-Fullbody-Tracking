@@ -40,6 +40,10 @@ class Parameters():
         self.camera_width = param["camera_width"]
         self.camera_height = param["camera_height"]
 
+        self.backend = param["backend"]
+        self.backend_ip = param["backend_ip"]
+        self.backend_port = param["backend_port"]
+
         self.calib_rot = True
         self.calib_tilt = True
         self.calib_scale = True

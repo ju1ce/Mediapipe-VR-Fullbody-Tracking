@@ -12,7 +12,7 @@ import threading
 import cv2
 import numpy as np
 from helpers import mediapipeTo3dpose, get_rot_mediapipe, get_rot_hands, draw_pose, keypoints_to_original, normalize_screen_coordinates, get_rot
-from backends import DummyBackend, SteamVRBackend
+from backends import DummyBackend, SteamVRBackend, VRChatOSCBackend
 
 import inference_gui
 import parameters
@@ -72,12 +72,8 @@ camera_thread.start()      #start our thread, which starts camera capture
 gui_thread = threading.Thread(target=inference_gui.make_inference_gui, args=(params,), daemon=True)
 gui_thread.start()
 
-
-if use_steamvr:
-    backend = SteamVRBackend()
-else:
-    backend = DummyBackend()
-
+backends = { 0: DummyBackend, 1: SteamVRBackend, 2: VRChatOSCBackend }
+backend = backends[params.backend]()
 backend.connect(params)
 
 print("Starting pose detector...")
@@ -160,8 +156,9 @@ while(True):
         
         pose3d = mediapipeTo3dpose(results.pose_world_landmarks.landmark)   #convert keypoints to a format we use
         
-        pose3d[:,0] = -pose3d[:,0]      #flip the points a bit since steamvrs coordinate system is a bit diffrent
-        pose3d[:,1] = -pose3d[:,1]
+        if backends[params.backend] == SteamVRBackend:
+            pose3d[:,0] = -pose3d[:,0]      #flip the points a bit since steamvrs coordinate system is a bit diffrent
+            pose3d[:,1] = -pose3d[:,1]
 
         pose3d_og = pose3d.copy()
         params.pose3d_og = pose3d_og
