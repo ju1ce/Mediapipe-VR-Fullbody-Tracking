@@ -47,9 +47,9 @@ class SteamVRBackend(Backend):
         pass
 
     def onparamchanged(self, params):
-        resp = sendToSteamVR(f"settings 50 {self.smoothing} {self.additional_smoothing}")
+        resp = sendToSteamVR(f"settings 50 {params.smoothing} {params.additional_smoothing}")
         while "error" in resp:
-            resp = sendToSteamVR(f"settings 50 {self.smoothing} {self.additional_smoothing}")
+            resp = sendToSteamVR(f"settings 50 {params.smoothing} {params.additional_smoothing}")
             print(resp)
             time.sleep(1)
 
