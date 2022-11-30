@@ -38,7 +38,7 @@ jobs:
         uses: Nuitka/Nuitka-Action@v0.4
         with:
           script-name: bin/mediapipepose.py
-          onefile: true
+          onefile: false
           enable-plugins: tk-inter, numpy
 
       - name: Upload Artifacts
@@ -46,6 +46,4 @@ jobs:
         with:
           name: ${{ runner.os }} Build
           path: |
-            build/*.exe
-            build/*.bin
-            build/*.app/**/*
+            build/
