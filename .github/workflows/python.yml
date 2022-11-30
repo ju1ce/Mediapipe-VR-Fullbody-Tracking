@@ -39,6 +39,9 @@ jobs:
         with:
           script-name: bin/mediapipepose.py
           onefile: true
+          enable-plugins: |
+            tk-inter
+            numpy
   
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
