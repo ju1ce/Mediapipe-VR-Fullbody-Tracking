@@ -5,7 +5,7 @@ block_cipher = None
 
 
 a = Analysis(['mediapipepose.py'],
-             pathex=['/bin'],
+             pathex=[''],
              binaries=[],
              datas=[('C:/hostedtoolcache/windows/Python/3.10.8/x64/lib/site-packages/mediapipe/modules','mediapipe/modules'),],
              hiddenimports=[],
