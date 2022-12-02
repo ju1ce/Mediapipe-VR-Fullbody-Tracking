@@ -45,7 +45,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: mediapipepose-windows
-          path: bin/dist/windows
+          path: bin/dist
       
           
 #      - name: Build Executable
