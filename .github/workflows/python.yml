@@ -26,24 +26,28 @@ jobs:
 
       - name: Setup Python
         uses: actions/setup-python@v4
+        id: cp310
         with:
           python-version: '3.10' # Version range or exact version of a Python version to use, using SemVer's version range syntax
           architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
-            
-      - name: Install Dependencies
-        run: |
-          pip install -r requirements.txt
           
-      - name: Build Executable
-        uses: Nuitka/Nuitka-Action@v0.4
-        with:
-          script-name: bin/mediapipepose.py
-          onefile: false
-          enable-plugins: tk-inter, numpy
+      - run: echo '${{ steps.cp310.outputs.python-version }}'
+      - run: echo '${{ steps.cp310.outputs.python-path }}'     
+      - run: echo "$Python_ROOT_DIR"
+#      - name: Install Dependencies
+#        run: |
+#          pip install -r requirements.txt
+          
+#      - name: Build Executable
+#        uses: Nuitka/Nuitka-Action@v0.4
+#        with:
+#          script-name: bin/mediapipepose.py
+#          onefile: false
+#          enable-plugins: tk-inter, numpy
 
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: ${{ runner.os }} Build
-          path: |
-            build/
+#      - name: Upload Artifacts
+#        uses: actions/upload-artifact@v3
+#        with:
+#          name: ${{ runner.os }} Build
+#          path: |
+#            build/
