@@ -5,9 +5,9 @@ block_cipher = None
 
 
 a = Analysis(['mediapipepose.py'],
-             pathex=['G:\\vr test stuff\\MoveNet\\movenet\\bin'],
+             pathex=['/bin'],
              binaries=[],
-             datas=[],
+             datas=[('/opt/hostedtoolcache/Python/3.10.8/x64/bin/python/Python310/lib/site-packages/mediapipe/modules','mediapipe/modules'),],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],

@@ -3,3 +3,4 @@ movenet_model*
 checkpoint*
 saved_params.json
 params.p
+build/
