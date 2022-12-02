@@ -16,7 +16,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [windows-latest]
       
     runs-on: ${{ matrix.os }}
     
@@ -35,14 +35,12 @@ jobs:
       - run: ls ${{ steps.cp310.outputs.python-path }}     
       - run: echo "$Python_ROOT_DIR"
       
- #     - name: Install Dependencies
- #       run: |
- #         pip install -r requirements.txt
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
       
       - name: Package Application
-        uses: JackMcKew/pyinstaller-action-windows@main
-        with:
-          path: bin
+        run: pyinstaller bin/mediapipepose.spec
       
       - uses: actions/upload-artifact@v2
         with:
