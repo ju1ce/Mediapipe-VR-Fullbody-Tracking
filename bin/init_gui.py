@@ -259,6 +259,8 @@ def getparams():
         min_tracking_confidence = float(trackc.get())
         static_image = bool(varstatic.get())
         backend = int(varbackend.get())
+        backend_ip_set = backend_ip.get()
+        backend_port_set = int(backend_port.get())
     else:
         maximgsize = 640
         
@@ -270,6 +272,8 @@ def getparams():
         min_tracking_confidence = 0.5
         static_image = False
         backend = 1
+        backend_ip_set = "127.0.0.1"
+        backend_port_set = 9000
 
     switch_advanced = param["switch_advanced"]
 
@@ -297,8 +301,8 @@ def getparams():
     param["static_image"] = static_image
     param["min_tracking_confidence"] = min_tracking_confidence
     param["backend"] = backend
-    param["backend_ip"] = backend_ip.get()
-    param["backend_port"] = int(backend_port.get())
+    param["backend_ip"] = backend_ip_set
+    param["backend_port"] = backend_port_set
     
     if switch_advanced:
         param["advanced"] = not advanced
