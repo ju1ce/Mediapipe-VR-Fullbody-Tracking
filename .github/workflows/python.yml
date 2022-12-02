@@ -32,8 +32,12 @@ jobs:
           architecture: 'x64' # optional x64 or x86. Defaults to x64 if not specified
           
       - run: echo '${{ steps.cp310.outputs.python-version }}'
-      - run: echo '${{ steps.cp310.outputs.python-path }}'     
+      - run: ls ${{ steps.cp310.outputs.python-path }}     
       - run: echo "$Python_ROOT_DIR"
+      
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
       
       - name: Package Application
         uses: JackMcKew/pyinstaller-action-windows@main
@@ -45,9 +49,6 @@ jobs:
           name: mediapipepose-windows
           path: bin/dist/windows
       
-#      - name: Install Dependencies
-#        run: |
-#          pip install -r requirements.txt
           
 #      - name: Build Executable
 #        uses: Nuitka/Nuitka-Action@v0.4
