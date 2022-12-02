@@ -35,9 +35,9 @@ jobs:
       - run: ls ${{ steps.cp310.outputs.python-path }}     
       - run: echo "$Python_ROOT_DIR"
       
-      - name: Install Dependencies
-        run: |
-          pip install -r requirements.txt
+ #     - name: Install Dependencies
+ #       run: |
+ #         pip install -r requirements.txt
       
       - name: Package Application
         uses: JackMcKew/pyinstaller-action-windows@main
