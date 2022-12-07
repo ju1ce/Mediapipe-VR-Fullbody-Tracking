@@ -17,7 +17,6 @@ class Parameters():
         self.static_image = param["static_image"]
 
         #PARAMETERS:
-        #model =  1          #TODO: add parameter for which model size to use
         self.maximgsize = param["imgsize"]               #to prevent working with huge images, images that have one axis larger than this value will be downscaled.
         self.cameraid = param["camid"]                    #to use with an usb or virtual webcam. If 0 doesnt work/opens wrong camera, try numbers 1-5 or so
         #cameraid = "http://192.168.1.102:8080/video"   #to use ip webcam, uncomment this line and change to your ip
@@ -25,8 +24,6 @@ class Parameters():
         self.preview_skeleton = param["prevskel"]             #if True, whole skeleton will appear in vr 2 meters in front of you. Good to visualize if everything is working
         self.dont_wait_hmd = param["waithmd"]                  #dont wait for movement from hmd, start inference immediately.
         self.rotate_image = 0 # cv2.ROTATE_90_CLOCKWISE # cv2.ROTATE_90_COUTERCLOCKWISE # cv2.ROTATE_180 # None # if you want, rotate the camera
-        #self.camera_latency = param["camlatency"]
-        #self.smoothing = param["smooth"]
         self.camera_latency = 0.1
         self.smoothing_1 = 0.5
         self.additional_smoothing_1 = 0
@@ -51,9 +48,9 @@ class Parameters():
         self.recalibrate = False
         
         #rotations in degrees!
-        self.euler_rot_y = 0
-        self.euler_rot_x = 0
-        self.euler_rot_z = 0
+        self.euler_rot_y = 180
+        self.euler_rot_x = 90
+        self.euler_rot_z = 180
 
         self.posescale = 1     
 
@@ -81,40 +78,42 @@ class Parameters():
         
         #self.prev_smoothing = self.smoothing
     
+
     def change_recalibrate(self):
         self.recalibrate = True
 
 
     def rot_change_y(self, value):                                  #callback functions. Whenever the value on sliders are changed, they are called
-        print(f"Changed y rotation value to {value}")
+        print(f"INFO: Changed y rotation value to {value}")
         self.euler_rot_y = value
         self.global_rot_y = R.from_euler('y',value,degrees=True)     #and the rotation is updated with the new value.
         
 
     def rot_change_x(self, value):
-        print(f"Changed x rotation value to {value}")
+        print(f"INFO: Changed x rotation value to {value}")
         self.euler_rot_x = value
         self.global_rot_x = R.from_euler('x',value-90,degrees=True) 
         
+
     def rot_change_z(self, value):
-        print(f"Changed z rotation value to {value}")
+        print(f"INFO: Changed z rotation value to {value}")
         self.euler_rot_z = value
         self.global_rot_z = R.from_euler('z',value-180,degrees=True) 
          
 
     def change_scale(self, value):
-        print(f"Changed scale value to {value}")
+        print(f"INFO: Changed scale value to {value}")
         #posescale = value/50 + 0.5
         self.posescale = value
 
 
     def change_img_rot(self, val):
-        print(f"Changed image rotation to {val*90} clockwise")
+        print(f"INFO: Changed image rotation to {val*90} clockwise")
         self.rotate_image = self.img_rot_dict[val]
 
 
     def change_smoothing(self, val, paramid = 0):
-        print(f"Changed smoothing value to {val}")
+        print(f"INFO: Changed smoothing value to {val}")
         self.smoothing = val
         
         if paramid == 1:
@@ -122,8 +121,9 @@ class Parameters():
         if paramid == 2:
             self.smoothing_2 = val
         
+
     def change_additional_smoothing(self, val, paramid = 0):
-        print(f"Changed additional smoothing value to {val}")
+        print(f"INFO: Changed additional smoothing value to {val}")
         self.additional_smoothing = val
 
         if paramid == 1:
@@ -131,20 +131,24 @@ class Parameters():
         if paramid == 2:
             self.additional_smoothing_2 = val
 
+
     def change_camera_latency(self, val):
-        print(f"Changed camera latency to {val}")
+        print(f"INFO: Changed camera latency to {val}")
         self.camera_latency = val
 
+
     def change_neck_offset(self,x,y,z):
-        print(f"Hmd to neck offset changed to: [{x},{y},{z}]")
+        print(f"INFO: Hmd to neck offset changed to: [{x},{y},{z}]")
         self.hmd_to_neck_offset = [x,y,z]
 
     def change_mirror(self, mirror):
-        print(f"Image mirror set to {mirror}")
+        print(f"INFO: Image mirror set to {mirror}")
         self.mirror = mirror
+
 
     def ready2exit(self):
         self.exit_ready = True
+
 
     def save_params(self):
         param = {}
@@ -177,6 +181,7 @@ class Parameters():
         with open("saved_params.json", "w") as f:
             json.dump(param, f)
 
+
     def load_params(self):
 
         try:
@@ -208,9 +213,8 @@ class Parameters():
             
             self.flip = param["flip"]
         except:
-            print("Save file not found, will be created after you exit the program.")
+            print("INFO: Save file not found, will be created after you exit the program.")
  
-
 
 if __name__ == "__main__":
     print("hehe")

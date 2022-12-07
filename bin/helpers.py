@@ -1,62 +1,22 @@
+import time
+
 import socket
 import cv2
+
 import numpy as np
 from sys import platform
 from scipy.spatial.transform import Rotation as R
-
-# Dictionary that maps from joint names to keypoint indices.
-KEYPOINT_DICT = {
-    'nose': 0,
-    'left_eye': 1,
-    'right_eye': 2,
-    'left_ear': 3,
-    'right_ear': 4,
-    'left_shoulder': 5,
-    'right_shoulder': 6,
-    'left_elbow': 7,
-    'right_elbow': 8,
-    'left_wrist': 9,
-    'right_wrist': 10,
-    'left_hip': 11,
-    'right_hip': 12,
-    'left_knee': 13,
-    'right_knee': 14,
-    'left_ankle': 15,
-    'right_ankle': 16
-}
-
-EDGES = [
-    (0, 1),
-    (0, 2),
-    (1, 3),
-    (2, 4),
-    (0, 5),
-    (0, 6),
-    (5, 7),
-    (7, 9),
-    (6, 8),
-    (8, 10),
-    (5, 6),
-    (5, 11),
-    (6, 12),
-    (11, 12),
-    (11, 13),
-    (13, 15),
-    (12, 14),
-    (14, 16)
-]
-
-skeleton3d = ((0,1),(1,2),(5,4),(4,3),(2,6),(3,6),(6,16),(16,7),(7,8),(8,9),(7,12),(7,13),(10,11),(11,12),(15,14),(14,13)) #head is 9, one hand is 10, other is 15
-
+import cv2
+import threading
+import sys
 
 def draw_pose(frame,pose,size):
     pose = pose*size
     for sk in EDGES:
         cv2.line(frame,(int(pose[sk[0],1]),int(pose[sk[0],0])),(int(pose[sk[1],1]),int(pose[sk[1],0])),(0,255,0),3)
 
-
 def mediapipeTo3dpose(lms):
-    
+    #33 pose landmarks as in https://google.github.io/mediapipe/solutions/pose.html#pose-landmark-model-blazepose-ghum-3d
     #convert landmarks returned by mediapipe to skeleton that I use.
     #lms = results.pose_world_landmarks.landmark
     
@@ -112,13 +72,9 @@ def mediapipeTo3dpose(lms):
 def keypoints_to_original(scale,center,points):
     scores = points[:,2]
     points -= 0.5
-    #print(scale,center)
-    #print(points)
     points *= scale
-    #print(points)
     points[:,0] += center[0]
     points[:,1] += center[1]
-    #print(points)
     
     points[:,2] = scores
     
@@ -230,7 +186,6 @@ def get_rot_mediapipe(pose3d):
     return hip_rot, r_foot_rot, l_foot_rot
 
     
-
 def get_rot(pose3d):
 
     ## guesses
@@ -317,7 +272,7 @@ def sendToPipe(text):
         raise Exception
     return resp
 
-def sendToSteamVR(text):
+def sendToSteamVR_(text):
     #Function to send a string to my steamvr driver through a named pipe.
     #open pipe -> send string -> read string -> close pipe
     #sometimes, something along that pipeline fails for no reason, which is why the try catch is needed.
@@ -326,7 +281,75 @@ def sendToSteamVR(text):
         resp = sendToPipe(text)
     except:
         return ["error"]
+
     string = resp.decode("utf-8")
     array = string.split(" ")
     
     return array
+
+
+def sendToSteamVR(text, num_tries=10, wait_time=0.1):
+    # wrapped function sendToSteamVR that detects failed connections
+    ret = sendToSteamVR_(text)
+    i = 0
+    while "error" in ret:
+        print("INFO: Error while connecting to SteamVR. Retrying...")
+        time.sleep(wait_time)
+        ret = sendToSteamVR_(text)
+        i += 1
+        if i >= num_tries:
+            return None # probably better to throw error here and exit the program (assert?)
+    
+    return ret
+
+    
+class CameraStream():
+    def __init__(self, params):
+        self.params = params
+        self.image_ready = False
+        # setup camera capture
+        if len(params.cameraid) <= 2:
+            cameraid = int(params.cameraid)
+        else:
+            cameraid = params.cameraid
+            
+        if params.camera_settings: # use advanced settings
+            self.cap = cv2.VideoCapture(cameraid, cv2.CAP_DSHOW) 
+            self.cap.set(cv2.CAP_PROP_SETTINGS, 1)
+        else:
+            self.cap = cv2.VideoCapture(cameraid)  
+
+        if not self.cap.isOpened():
+            print("ERROR: Could not open camera, try another id/IP")
+            shutdown(params)
+
+        if params.camera_height != 0:
+            self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, int(params.camera_height))
+            
+        if params.camera_width != 0:
+            self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, int(params.camera_width))
+
+        print("INFO: Start camera thread")
+        self.thread = threading.Thread(target=self.update, args=(), daemon=True)
+        self.thread.start()
+
+    
+    def update(self):
+        # continuously grab images
+        while True:
+            ret, self.image_from_thread = self.cap.read()    
+            self.image_ready = True
+            
+            if ret == 0:
+                print("ERROR: Camera capture failed! missed frames.")
+                self.params.exit_ready = True
+                return
+ 
+
+def shutdown(params):
+    # first save parameters 
+    print("INFO: Saving parameters...")
+    params.save_params()
+
+    cv2.destroyAllWindows()
+    sys.exit("INFO: Exiting... You can close the window after 10 seconds.")

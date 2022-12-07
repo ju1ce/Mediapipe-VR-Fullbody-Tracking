@@ -6,6 +6,9 @@ from pythonosc import osc_bundle_builder
 from pythonosc import osc_message_builder
 from pythonosc import udp_client
 
+from helpers import shutdown
+import numpy as np
+
 class Backend(ABC):
 
     @abstractmethod
@@ -48,29 +51,19 @@ class SteamVRBackend(Backend):
 
     def onparamchanged(self, params):
         resp = sendToSteamVR(f"settings 50 {params.smoothing} {params.additional_smoothing}")
-        while "error" in resp:
-            resp = sendToSteamVR(f"settings 50 {params.smoothing} {params.additional_smoothing}")
-            print(resp)
-            time.sleep(1)
-
+        if resp is None:
+            print("ERROR: Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+            shutdown(params)
+            
     def connect(self, params):
         print("Connecting to SteamVR")
 
         #ask the driver, how many devices are connected to ensure we dont add additional trackers
         #in case we restart the program
         numtrackers = sendToSteamVR("numtrackers")
-        for i in range(10):
-            if "error" in numtrackers:
-                print("Error while connecting to SteamVR. Retrying...")
-                time.sleep(1)
-                numtrackers = sendToSteamVR("numtrackers")
-            else:
-                break
-
-        if "error" in numtrackers:
-            print("Could not connect to SteamVR after 10 tries!")
-            time.sleep(10)
-            assert 0, "Could not connect to SteamVR after 10 tries"
+        if numtrackers is None:
+            print("ERROR: Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+            shutdown(params)
 
         numtrackers = int(numtrackers[2])
 
@@ -96,23 +89,21 @@ class SteamVRBackend(Backend):
         for i in range(numtrackers,totaltrackers):
             #sending addtracker to our driver will... add a tracker. to our driver.
             resp = sendToSteamVR(f"addtracker MediaPipeTracker{i} {roles[i]}")
-            while "error" in resp:
-                resp = sendToSteamVR(f"addtracker MediaPipeTracker{i} {roles[i]}")
-                print(resp)
-                time.sleep(0.2)
-            time.sleep(0.2)
+            if resp is None:
+                print("ERROR: Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+                shutdown(params)
 
         resp = sendToSteamVR(f"settings 50 {params.smoothing} {params.additional_smoothing}")
-        while "error" in resp:
-            resp = sendToSteamVR(f"settings 50 {params.smoothing} {params.additional_smoothing}")
-            print(resp)
-            time.sleep(1)
+        if resp is None:
+            print("ERROR: Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+            shutdown(params)
 
     def updatepose(self, params, pose3d, rots, hand_rots):
         array = sendToSteamVR("getdevicepose 0")        #get hmd data to allign our skeleton to
 
-        if "error" in array:    #continue to next iteration if there is an error
-            return False
+        if array is None or len(array) < 10:
+            print("ERROR: Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+            shutdown(params)
 
         headsetpos = [float(array[3]),float(array[4]),float(array[5])]
         headsetrot = R.from_quat([float(array[7]),float(array[8]),float(array[9]),float(array[6])])
@@ -121,7 +112,7 @@ class SteamVRBackend(Backend):
                                                             #the skeleton (unlike the eyes/nose, which jump around) and can be calculated from hmd.
 
         if params.recalibrate:
-            print("frame to recalibrate")
+            print("INFO: frame to recalibrate")
 
         else:
             pose3d = pose3d * params.posescale     #rescale skeleton to calibrated height
@@ -168,6 +159,7 @@ def osc_build_bundle(trackers):
 class VRChatOSCBackend(Backend):
 
     def __init__(self, **kwargs):
+        self.prev_pose3d = np.zeros((29,3))
         pass
 
     def onparamchanged(self, params):
@@ -180,6 +172,13 @@ class VRChatOSCBackend(Backend):
             self.client = udp_client.UDPClient("127.0.0.1", 9000)
 
     def updatepose(self, params, pose3d, rots, hand_rots):
+    
+        pose3d[:,1] = -pose3d[:,1]      #flip the positions as coordinate system is different from steamvr
+        pose3d[:,2] = -pose3d[:,2]
+        
+        pose3d = self.prev_pose3d*params.additional_smoothing + pose3d*(1-params.additional_smoothing)
+        self.prev_pose3d = pose3d
+    
         headsetpos = [float(0),float(0),float(0)]
         headsetrot = R.from_quat([float(0),float(0),float(0),float(1)])
 

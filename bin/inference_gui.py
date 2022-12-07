@@ -2,9 +2,9 @@ import tkinter as tk
 from tkinter import ttk
 import numpy as np
 from scipy.spatial.transform import Rotation as R
-import helpers
+from helpers import shutdown, sendToSteamVR
 
-use_steamvr = True
+#use_steamvr = True
 
 class InferenceWindow(tk.Frame):
     def __init__(self, root, params, *args, **kwargs):
@@ -99,6 +99,8 @@ class InferenceWindow(tk.Frame):
         # exit
         tk.Button(self.root, text='Press to exit', command=self.params.ready2exit).pack()
 
+        root.protocol("WM_DELETE_WINDOW", self.params.ready2exit) # when press x
+
         #self.root.after(0, self.set_rot_y_var)
         #self.root.after(0, self.set_rot_x_var)
           
@@ -122,9 +124,9 @@ class InferenceWindow(tk.Frame):
     def change_log_frametime(self):
         self.params.log_frametime = self.log_frametime_var.get()
         if self.params.log_frametime:
-            print("Enabled frametime logging")
+            print("INFO: Enabled frametime logging")
         else:
-            print("Disabled frametime logging")
+            print("INFO: Disabled frametime logging")
 
     def set_rot_y_var(self):
         angle = self.params.euler_rot_y
@@ -300,18 +302,13 @@ class InferenceWindow(tk.Frame):
 
     def autocalibrate(self):
 
+        use_steamvr = True if self.params.backend == 1 else False
+
         if use_steamvr:
-            for _ in range(10):
-                array = helpers.sendToSteamVR("getdevicepose 0")        #get hmd data to allign our skeleton to
+            array = sendToSteamVR("getdevicepose 0")        #get hmd data to allign our skeleton to
 
-                if "error" in array:    #continue to next iteration if there is an error
-                    continue
-                else:
-                    break
-
-            if "error" in array:    #continue to next iteration if there is an error
-                print("Failed to contact SteamVR after 10 tries... Try to autocalibrate again.")
-                return
+            if array is None or len(array) < 10:
+                shutdown(self.params)
 
             headsetpos = [float(array[3]),float(array[4]),float(array[5])]
             headsetrot = R.from_quat([float(array[7]),float(array[8]),float(array[9]),float(array[6])])
@@ -320,7 +317,11 @@ class InferenceWindow(tk.Frame):
                                                             #the skeleton (unlike the eyes/nose, which jump around) and can be calculated from hmd.   
 
         if self.params.calib_tilt:
-            feet_middle = (self.params.pose3d_og[0] + self.params.pose3d_og[5])/2
+            try:
+                feet_middle = (self.params.pose3d_og[0] + self.params.pose3d_og[5])/2
+            except:
+                print("INFO: No pose detected, try to autocalibrate again.")
+                return
         
             print(feet_middle)
         
@@ -328,7 +329,7 @@ class InferenceWindow(tk.Frame):
             
             value = np.arctan2(feet_middle[0],-feet_middle[1]) * 57.295779513
             
-            print("Precalib z angle: ", value)
+            print("INFO: Precalib z angle: ", value)
             
             self.params.rot_change_z(-value+180)
             self.set_rot_z_var()
@@ -339,13 +340,13 @@ class InferenceWindow(tk.Frame):
             feet_middle = (self.params.pose3d_og[0] + self.params.pose3d_og[5])/2
             value = np.arctan2(feet_middle[0],-feet_middle[1]) * 57.295779513
             
-            print("Postcalib z angle: ", value)
+            print("INFO: Postcalib z angle: ", value)
                 
             ##tilt calibration
                 
             value = np.arctan2(feet_middle[2],-feet_middle[1]) * 57.295779513
             
-            print("Precalib x angle: ", value)
+            print("INFO: Precalib x angle: ", value)
             
             self.params.rot_change_x(value+90)
             self.set_rot_x_var()
@@ -356,24 +357,23 @@ class InferenceWindow(tk.Frame):
             feet_middle = (self.params.pose3d_og[0] + self.params.pose3d_og[5])/2
             value = np.arctan2(feet_middle[2],-feet_middle[1]) * 57.295779513
             
-            print("Postcalib x angle: ", value)
+            print("INFO: Postcalib x angle: ", value)
 
         if use_steamvr and self.params.calib_rot:
             feet_rot = self.params.pose3d_og[0] - self.params.pose3d_og[5]
             value = np.arctan2(feet_rot[0],feet_rot[2])
             value_hmd = np.arctan2(headsetrot.as_matrix()[0][0],headsetrot.as_matrix()[2][0])
-            print("Precalib y value: ", value * 57.295779513)
-            print("hmd y value: ", value_hmd * 57.295779513)  
+            print("INFO: Precalib y value: ", value * 57.295779513)
+            print("INFO: hmd y value: ", value_hmd * 57.295779513)  
             
             value = value - value_hmd
             
             value = -value
    
-            print("Calibrate to value:", value * 57.295779513) 
+            print("INFO: Calibrate to value:", value * 57.295779513) 
             
             self.params.rot_change_y(value * 57.295779513)
             
-
             #angle = self.params.global_rot_y.as_euler('zyx', degrees=True)
             #print("angle from rot = ", -(180+angle[1]), "whole:",angle)
             
@@ -385,7 +385,7 @@ class InferenceWindow(tk.Frame):
             feet_rot = self.params.pose3d_og[0] - self.params.pose3d_og[5]
             value = np.arctan2(feet_rot[0],feet_rot[2])
             
-            print("Postcalib y value: ", value * 57.295779513)
+            print("INFO: Postcalib y value: ", value * 57.295779513)
 
         if use_steamvr and self.params.calib_scale:
             #calculate the height of the skeleton, calculate the height in steamvr as distance of hmd from the ground.
@@ -403,6 +403,10 @@ class InferenceWindow(tk.Frame):
         separator.pack(fill='x')
         
     def pause_tracking(self):
+        if not self.params.paused:
+            print("INFO: Pose estimation paused")
+        else:
+            print("INFO: Pose estimation unpaused") 
         self.params.paused = not self.params.paused
 
 
