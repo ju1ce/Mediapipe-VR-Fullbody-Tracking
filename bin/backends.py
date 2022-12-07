@@ -151,7 +151,8 @@ def osc_build_msg(name, position_or_rotation, args):
 
 def osc_build_bundle(trackers):
     builder = osc_bundle_builder.OscBundleBuilder(osc_bundle_builder.IMMEDIATELY)
-    for tracker in trackers:
+    builder.add_content(osc_build_msg(trackers[0]['name'], "position", trackers[0]['position']))
+    for tracker in trackers[1:]:
         builder.add_content(osc_build_msg(tracker['name'], "position", tracker['position']))
         builder.add_content(osc_build_msg(tracker['name'], "rotation", tracker['rotation']))
     return builder.build()
@@ -192,7 +193,7 @@ class VRChatOSCBackend(Backend):
             offset = pose3d[7] - (headsetpos+neckoffset)    #calculate the position of the skeleton
             if not params.preview_skeleton:
                 trackers = []
-                trackers.append({ "name": "head", "position": [ 0, 0, 0 ], "rotation": [ 0, 0, 0 ] })
+                trackers.append({ "name": "head", "position": [ 0, 0, 0 ]})
                 if not params.ignore_hip:
                     for i in [(0,1),(5,2),(6,0)]:
                         position = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
