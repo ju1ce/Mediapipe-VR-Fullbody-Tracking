@@ -59,6 +59,12 @@ def getparams():
         param["min_tracking_confidence"] = 0.5
     if "static_image" not in param:
         param["static_image"] = False    
+    if "backend" not in param:
+        param["backend"] = 1
+    if "backend_ip" not in param:
+        param["backend_ip"] = "127.0.0.1"
+    if "backend_port" not in param:
+        param["backend_port"] = 9000
     if "advanced" not in param:
         param["advanced"] = False
        
@@ -147,6 +153,35 @@ def getparams():
         varstatic = tk.IntVar(value = param["static_image"])
         static_check = tk.Checkbutton(text = "Static image mode", variable = varstatic)
         static_check.pack()
+
+        backend_frame = tk.Frame(window)
+        backend_selection_frame = tk.Frame(backend_frame)
+        backend_options_frame = tk.Frame(backend_frame)
+
+        varbackend = tk.IntVar(value = param["backend"])
+
+        def show_hide_backend_options():
+            if varbackend.get() == 2:
+                backend_options_frame.pack(side = tk.BOTTOM)
+            else:
+                backend_options_frame.pack_forget()
+
+        tk.Label(backend_selection_frame, text="Backend: ").pack(side = tk.LEFT)
+        tk.Radiobutton(backend_selection_frame, text="SteamVR", variable = varbackend, value = 1, command = show_hide_backend_options).pack(side = tk.LEFT)
+        tk.Radiobutton(backend_selection_frame, text="VRChatOSC",  variable = varbackend, value = 2, command = show_hide_backend_options).pack(side = tk.LEFT)
+        backend_selection_frame.pack(side = tk.TOP)
+
+        tk.Label(backend_options_frame, text="IP/port:").pack(side = tk.LEFT)
+        backend_ip = tk.Entry(backend_options_frame, width = 15)
+        backend_ip.insert(0, param["backend_ip"])
+        backend_ip.pack(side = tk.LEFT)
+        backend_port = tk.Entry(backend_options_frame, width = 5)
+        backend_port.insert(0, param["backend_port"])
+        backend_port.pack(side = tk.LEFT)
+
+        show_hide_backend_options()
+        backend_frame.pack()
+
     
     param["switch_advanced"] = False
     if param["advanced"]:
@@ -183,6 +218,9 @@ def getparams():
         model_complexity = int(modelc.get())
         min_tracking_confidence = float(trackc.get())
         static_image = bool(varstatic.get())
+        backend = int(varbackend.get())
+        backend_ip_set = backend_ip.get()
+        backend_port_set = int(backend_port.get())
     else:
         maximgsize = 640
         
@@ -193,6 +231,9 @@ def getparams():
         model_complexity = 1
         min_tracking_confidence = 0.5
         static_image = False
+        backend = 1
+        backend_ip_set = "127.0.0.1"
+        backend_port_set = 9000
 
     switch_advanced = param["switch_advanced"]
 
@@ -219,6 +260,9 @@ def getparams():
     param["smooth_landmarks"] = mp_smoothing
     param["static_image"] = static_image
     param["min_tracking_confidence"] = min_tracking_confidence
+    param["backend"] = backend
+    param["backend_ip"] = backend_ip_set
+    param["backend_port"] = backend_port_set
     
     if switch_advanced:
         param["advanced"] = not advanced
