@@ -72,6 +72,9 @@ def main():
             print(f"INFO: Changed smoothing value from {prev_smoothing} to {params.smoothing}")
             print(f"INFO: Changed additional smoothing from {prev_add_smoothing} to {params.additional_smoothing}")
 
+            prev_smoothing = params.smoothing
+            prev_add_smoothing = params.additional_smoothing
+
             backend.onparamchanged(params)
 
         #wait untill camera thread captures another image

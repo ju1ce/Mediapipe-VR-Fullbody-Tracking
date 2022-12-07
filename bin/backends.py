@@ -51,11 +51,10 @@ class SteamVRBackend(Backend):
 
     def onparamchanged(self, params):
         resp = sendToSteamVR(f"settings 50 {params.smoothing} {params.additional_smoothing}")
-        while "error" in resp:
-            resp = sendToSteamVR(f"settings 50 {params.smoothing} {params.additional_smoothing}")
-            print(resp)
-            time.sleep(1)
-
+        if resp is None:
+            print("ERROR: Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
+            shutdown(params)
+            
     def connect(self, params):
         print("Connecting to SteamVR")
 
