@@ -7,6 +7,7 @@ from pythonosc import osc_message_builder
 from pythonosc import udp_client
 
 from helpers import shutdown
+import numpy as np
 
 class Backend(ABC):
 
@@ -159,6 +160,7 @@ def osc_build_bundle(trackers):
 class VRChatOSCBackend(Backend):
 
     def __init__(self, **kwargs):
+        self.prev_pose3d = np.zeros((29,3))
         pass
 
     def onparamchanged(self, params):
@@ -171,6 +173,13 @@ class VRChatOSCBackend(Backend):
             self.client = udp_client.UDPClient("127.0.0.1", 9000)
 
     def updatepose(self, params, pose3d, rots, hand_rots):
+    
+        pose3d[:,1] = -pose3d[:,1]      #flip the positions as coordinate system is different from steamvr
+        pose3d[:,2] = -pose3d[:,2]
+        
+        pose3d = self.prev_pose3d*params.additional_smoothing + pose3d*(1-params.additional_smoothing)
+        self.prev_pose3d = pose3d
+    
         headsetpos = [float(0),float(0),float(0)]
         headsetrot = R.from_quat([float(0),float(0),float(0),float(1)])
 
