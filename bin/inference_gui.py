@@ -4,7 +4,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation as R
 from helpers import shutdown, sendToSteamVR
 
-use_steamvr = True
+#use_steamvr = True
 
 class InferenceWindow(tk.Frame):
     def __init__(self, root, params, *args, **kwargs):
@@ -301,6 +301,8 @@ class InferenceWindow(tk.Frame):
 
 
     def autocalibrate(self):
+
+        use_steamvr = True if self.params.backend == 1 else False
 
         if use_steamvr:
             array = sendToSteamVR("getdevicepose 0")        #get hmd data to allign our skeleton to

@@ -48,9 +48,9 @@ class Parameters():
         self.recalibrate = False
         
         #rotations in degrees!
-        self.euler_rot_y = 0
-        self.euler_rot_x = 0
-        self.euler_rot_z = 0
+        self.euler_rot_y = 180
+        self.euler_rot_x = 90
+        self.euler_rot_z = 180
 
         self.posescale = 1     
 
