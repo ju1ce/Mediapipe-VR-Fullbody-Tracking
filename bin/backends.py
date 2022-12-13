@@ -195,7 +195,8 @@ class VRChatOSCBackend(Backend):
                 trackers = []
                 trackers.append({ "name": "head", "position": [ 0, 0, 0 ]})
                 if not params.ignore_hip:
-                    for i in [(0,1),(5,2),(6,0)]:
+                    for i in [(0,2),(5,1),(6,0)]:
+                        #left foot should be position 0 and rotation 1, but for osc, the rotations got switched at some point so its (0,2)
                         position = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
                         position[0] = -position[0]
                         position[1] = -position[1]
@@ -203,10 +204,10 @@ class VRChatOSCBackend(Backend):
                         rotation = R.from_quat(rots[i[1]])
                         rotation *= R.from_euler("ZY", [ 180, -90 ], degrees=True)
                         rotation = rotation.as_euler("ZXY", degrees=True)
-                        rotation = [ rotation[1], rotation[2], rotation[0] ]
+                        rotation = [ -rotation[1], rotation[2], -rotation[0] ]  #mirror the rotation, as we mirrored the positions
                         trackers.append({ "name": str(i[1]+1), "position": position, "rotation": rotation })
                 else:
-                    for i in [(0,1),(5,2)]:
+                    for i in [(0,2),(5,1)]:
                         position = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
                         position[0] = -position[0]
                         position[1] = -position[1]
@@ -214,7 +215,7 @@ class VRChatOSCBackend(Backend):
                         rotation = R.from_quat(rots[i[1]])
                         rotation *= R.from_euler("ZY", [ 180, -90 ], degrees=True)
                         rotation = rotation.as_euler("ZXY", degrees=True)
-                        rotation = [ rotation[1], rotation[2], rotation[0] ]
+                        rotation = [ -rotation[1], rotation[2], -rotation[0] ]
                         trackers.append({ "name": str(i[1]+1), "position": position, "rotation": rotation })
                 if params.use_hands:
                     # Sending hand trackers unsupported
