@@ -48,19 +48,12 @@ jobs:
                   echo "$RUNNER_OS not supported"
                   exit 1
              fi     
-      - name: Upload Artifact
+      - name: Upload Artifac
         uses: actions/upload-artifact@v2
         with:
-          name: |
-             if [ "$RUNNER_OS" == "Linux" ]; then
-                  mediapipepose-linux
-             elif [ "$RUNNER_OS" == "Windows" ]; then
-                  mediapipepose-windows
-             else
-                  echo "$RUNNER_OS not supported"
-                  exit 1
-             fi     
+          name: mediapipepose-${{ runner.os }}   
           path: dist
+
       
           
 #      - name: Build Executable
