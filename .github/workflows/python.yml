@@ -16,7 +16,7 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [windows-latest, ubuntu-latest]
       
     runs-on: ${{ matrix.os }}
     
@@ -40,7 +40,15 @@ jobs:
           pip install -r requirements.txt
       
       - name: Package Application
-        run: pyinstaller bin/mediapipepose.spec
+        run:   |
+             if [ "$RUNNER_OS" == "Linux" ]; then
+                  pyinstaller bin/mediapipepose_linux.spec
+             elif [ "$RUNNER_OS" == "Windows" ]; then
+                  pyinstaller bin/mediapipepose.spec
+             else
+                  echo "$RUNNER_OS not supported"
+                  exit 1
+             fi     
       
       - uses: actions/upload-artifact@v2
         with:

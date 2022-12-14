@@ -2,6 +2,8 @@ import tkinter as tk
 import sys
 import pickle
 
+from sys import platform
+
 def set_advanced(window,param):
     param["switch_advanced"] = True
     window.quit()
@@ -94,12 +96,14 @@ def getparams():
     camheight.pack()
     camheight.insert(0,param["camera_height"])
     
-    if not param["advanced"]:
-        tk.Label(text="NOTE: Opening camera settings may change camera behaviour. \nSome cameras may only work with this enabled, some only with this \ndisabled, and it may change which camera ID you have to use.", width = 55).pack()
+    if platform == "win32":
+        if not param["advanced"]:
+            tk.Label(text="NOTE: Opening camera settings may change camera behaviour. \nSome cameras may only work with this enabled, some only with this \ndisabled, and it may change which camera ID you have to use.", width = 55).pack()
     
     varcamsettings = tk.IntVar(value = param["camera_settings"])
     cam_settings_check = tk.Checkbutton(text = "Attempt to open camera settings", variable = varcamsettings)
-    cam_settings_check.pack()
+    if platform == "win32":
+        cam_settings_check.pack()
 
     if param["advanced"]:
         tk.Label(text="Maximum image size:", width = 50).pack()
