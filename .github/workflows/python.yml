@@ -38,16 +38,14 @@ jobs:
         run: |
           pip install -r requirements.txt
       
-      - name: Package Application
-        run:   |
-             if [ "$RUNNER_OS" == "Linux" ]; then
-                  pyinstaller bin/mediapipepose_linux.spec
-             elif [ "$RUNNER_OS" == "Windows" ]; then
-                  pyinstaller bin/mediapipepose.spec
-             else
-                  echo "$RUNNER_OS not supported"
-                  exit 1
-             fi     
+      - name: Package Application (windows)
+        if: runner.os == 'Windows'
+        run:  pyinstaller bin/mediapipepose.spec 
+             
+      - name: Package Application (linux)
+        if: runner.os == 'Linux'
+        run:  pyinstaller bin/mediapipepose_linux.spec
+ 
       - name: Upload Artifac
         uses: actions/upload-artifact@v2
         with:
