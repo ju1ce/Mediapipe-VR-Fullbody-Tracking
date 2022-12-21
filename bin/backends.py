@@ -88,7 +88,7 @@ class SteamVRBackend(Backend):
 
         for i in range(numtrackers,totaltrackers):
             #sending addtracker to our driver will... add a tracker. to our driver.
-            resp = sendToSteamVR(f"addtracker MediaPipeTracker{i} {roles[i]}")
+            resp = sendToSteamVR(f"addtracker MPTracker{i} {roles[i]}")
             if resp is None:
                 print("ERROR: Could not connect to SteamVR after 10 tries! Launch SteamVR and try again.")
                 shutdown(params)
@@ -174,8 +174,8 @@ class VRChatOSCBackend(Backend):
 
     def updatepose(self, params, pose3d, rots, hand_rots):
     
-        pose3d[:,1] = -pose3d[:,1]      #flip the positions as coordinate system is different from steamvr
-        pose3d[:,2] = -pose3d[:,2]
+        #pose3d[:,1] = -pose3d[:,1]      #flip the positions as coordinate system is different from steamvr
+        #pose3d[:,0] = -pose3d[:,0]
         
         pose3d = self.prev_pose3d*params.additional_smoothing + pose3d*(1-params.additional_smoothing)
         self.prev_pose3d = pose3d
@@ -195,27 +195,27 @@ class VRChatOSCBackend(Backend):
                 trackers = []
                 trackers.append({ "name": "head", "position": [ 0, 0, 0 ]})
                 if not params.ignore_hip:
-                    for i in [(0,2),(5,1),(6,0)]:
+                    for i in [(0,1),(5,2),(6,0)]:
                         #left foot should be position 0 and rotation 1, but for osc, the rotations got switched at some point so its (0,2)
                         position = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
-                        position[0] = -position[0]
-                        position[1] = -position[1]
-                        position[2] = -position[2]
+                        #position[0] = -position[0]
+                        #position[1] = -position[1]
+                        #position[2] = -position[2]
                         rotation = R.from_quat(rots[i[1]])
-                        rotation *= R.from_euler("ZY", [ 180, -90 ], degrees=True)
+                        #rotation *= R.from_euler("ZY", [ 180, -90 ], degrees=True)
                         rotation = rotation.as_euler("ZXY", degrees=True)
-                        rotation = [ -rotation[1], rotation[2], -rotation[0] ]  #mirror the rotation, as we mirrored the positions
+                        rotation = [ rotation[0], rotation[2], -rotation[1] ]  #mirror the rotation, as we mirrored the positions
                         trackers.append({ "name": str(i[1]+1), "position": position, "rotation": rotation })
                 else:
-                    for i in [(0,2),(5,1)]:
+                    for i in [(0,1),(5,2)]:
                         position = pose3d[i[0]] - offset       #for each foot and hips, offset it by skeleton position and send to steamvr
-                        position[0] = -position[0]
-                        position[1] = -position[1]
-                        position[2] = -position[2]
+                        #position[0] = -position[0]
+                        #position[1] = -position[1]
+                        #position[2] = -position[2]
                         rotation = R.from_quat(rots[i[1]])
-                        rotation *= R.from_euler("ZY", [ 180, -90 ], degrees=True)
+                        #rotation *= R.from_euler("ZY", [ 180, -90 ], degrees=True)
                         rotation = rotation.as_euler("ZXY", degrees=True)
-                        rotation = [ -rotation[1], rotation[2], -rotation[0] ]
+                        rotation = [ rotation[0], rotation[2], -rotation[1] ]
                         trackers.append({ "name": str(i[1]+1), "position": position, "rotation": rotation })
                 if params.use_hands:
                     # Sending hand trackers unsupported
