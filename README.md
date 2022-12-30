@@ -5,6 +5,18 @@ This is still a work in progress, but an executable is now available for anyone 
 
 For any questions or bug reports, please write into the ApriltagTrackers discord: https://discord.gg/g2ctkXB4bb
 
+## Using VRChat OSC:
+
+If you are logged into github, you can go under the "Actions" tab and download the latest nightly release, which supports VRChats OSC trackers. It should be possible to use it for FBT on standalone quest VRChat. However, the current release is slightly broken. While it works, the rotations of joints are a bit wrong, which can cause some weird poses.
+
+To install that version, you need to first download the latest stable release, which contains the driver files, and install the drivers using the install_driver.exe file. After that, you can download the latest artifact from Actions, and navigate to mediapipepose.exe. All other steps are the same as below, except for a few differences:
+
+- Enable Advanced mode and change the connection type to VRChat OSC. On quest, also setup the ping and port (tutorials for that can be found elsewhere, such as SlimeVR OSC tutorials)
+- Automatic calibration no longer works for the first rotation and the scale. You will need to adjust them manualy.
+- Smoothing window setting will do nothing, to adjust smoothing set the Additional smoothing value
+
+Again, this build is experimental, so please message us with any issues or feedback on the ApriltagTrackers discord!
+
 ## How to run:
 
 An executable version has now been added to make running this easier. Download it from [here](https://github.com/ju1ce/Mediapipe-VR-Fullbody-Tracking/releases). Unzip the folder anywhere you want.
