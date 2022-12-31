@@ -14,6 +14,7 @@ To install that version, you need to first download the latest stable release, w
 - Enable Advanced mode and change the connection type to VRChat OSC. On quest, also setup the ping and port (tutorials for that can be found elsewhere, such as SlimeVR OSC tutorials)
 - Automatic calibration no longer works for the first rotation and the scale. You will need to adjust them manualy.
 - Smoothing window setting will do nothing, to adjust smoothing set the Additional smoothing value
+- In OSC mode, the camera input must be mirrored. Use the mirror parameter.
 
 Again, this build is experimental, so please message us with any issues or feedback on the ApriltagTrackers discord!
 
