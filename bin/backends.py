@@ -136,7 +136,7 @@ class SteamVRBackend(Backend):
             else:
                 for i in range(23):
                     joint = pose3d[i] - offset      #if previewing skeleton, send the position of each keypoint to steamvr without rotation
-                    sendToSteamVR(f"updatepose {i} {joint[0]} {joint[1]} {joint[2] - 2} 1 0 0 0 {params.camera_latency} 0.8")
+                    sendToSteamVR(f"updatepose {i} {joint[0]} {joint[1]} {joint[2]} 1 0 0 0 {params.camera_latency} 0.8")
         return True
 
     def disconnect(self):
