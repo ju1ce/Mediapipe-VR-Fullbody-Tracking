@@ -140,6 +140,11 @@ def main():
                 hand_rots = get_rot_hands(pose3d)
             else:
                 hand_rots = None
+                
+            
+            #pose3d[0] = [1,0,1]
+            #rots = (rots[0], R.from_euler('ZXY',[i/17,i/11,i/10]).as_quat(),rots[2])   #for testing rotation conversions
+            #i+=1
             
             if not backend.updatepose(params, pose3d, rots, hand_rots):
                 continue

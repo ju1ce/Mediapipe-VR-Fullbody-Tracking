@@ -183,7 +183,7 @@ def get_rot_mediapipe(pose3d):
     r_foot_rot = R.from_matrix(r_foot_rot).as_quat()
     l_foot_rot = R.from_matrix(l_foot_rot).as_quat()
     
-    return hip_rot, r_foot_rot, l_foot_rot
+    return hip_rot, l_foot_rot, r_foot_rot
 
     
 def get_rot(pose3d):
