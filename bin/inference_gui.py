@@ -66,9 +66,10 @@ class InferenceWindow(tk.Frame):
             tk.Label(frame_profile, text=" ", width = 5).pack(side='left')
 
         # smoothing
-        frame4 = tk.Frame(self.root)
-        frame4.pack()
-        self.change_smooothing_frame(frame4)
+        if params.advanced:
+            frame4 = tk.Frame(self.root)
+            frame4.pack()
+            self.change_smooothing_frame(frame4)
 
         # smoothing
         frame4_2 = tk.Frame(self.root)
@@ -76,9 +77,10 @@ class InferenceWindow(tk.Frame):
         self.change_add_smoothing_frame(frame4_2)
 
         # smoothing
-        frame4_1 = tk.Frame(self.root)
-        frame4_1.pack()
-        self.change_cam_lat_frame(frame4_1)
+        if params.advanced:
+            frame4_1 = tk.Frame(self.root)
+            frame4_1.pack()
+            self.change_cam_lat_frame(frame4_1)
 
         # rotate image 
         frame5 = tk.Frame(self.root)

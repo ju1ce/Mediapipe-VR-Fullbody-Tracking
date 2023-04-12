@@ -78,6 +78,9 @@ def getparams():
 
     window.protocol("WM_DELETE_WINDOW", on_close)
 
+    if not param["advanced"]:
+        tk.Label(text="The format http://<ip-here>:8080/video is for use with\n the IP Webcam android application.\n If using something else, such as a regular USB Webcam,\n just try 0,1,2... until the correct camera opens.", width = 50).pack()
+
     tk.Label(text="Camera IP or ID:", width = 50).pack()
     camid = tk.Entry(width = 50)
     camid.pack()
@@ -118,7 +121,7 @@ def getparams():
     rot_feet_check.pack()
     
     if not param["advanced"]:
-        tk.Label(text="NOTE: VRChat requires a hip tracker. Only disable it if you \nuse another software for hip tracking, such as owoTrack.", width = 55).pack()
+        tk.Label(text="NOTE: VRChat works better with a hip tracker. Only disable it if you \nuse another software for hip tracking, such as owoTrack.", width = 55).pack()
     
     varhip = tk.IntVar(value = param["ignore_hip"])
     hip_check = tk.Checkbutton(text = "Disable hip tracker", variable = varhip)
@@ -158,33 +161,33 @@ def getparams():
         static_check = tk.Checkbutton(text = "Static image mode", variable = varstatic)
         static_check.pack()
 
-        backend_frame = tk.Frame(window)
-        backend_selection_frame = tk.Frame(backend_frame)
-        backend_options_frame = tk.Frame(backend_frame)
+    backend_frame = tk.Frame(window)
+    backend_selection_frame = tk.Frame(backend_frame)
+    backend_options_frame = tk.Frame(backend_frame)
 
-        varbackend = tk.IntVar(value = param["backend"])
+    varbackend = tk.IntVar(value = param["backend"])
 
-        def show_hide_backend_options():
-            if varbackend.get() == 2:
-                backend_options_frame.pack(side = tk.BOTTOM)
-            else:
-                backend_options_frame.pack_forget()
+    def show_hide_backend_options():
+        if varbackend.get() == 2:
+            backend_options_frame.pack(side = tk.BOTTOM)
+        else:
+            backend_options_frame.pack_forget()
 
-        tk.Label(backend_selection_frame, text="Backend: ").pack(side = tk.LEFT)
-        tk.Radiobutton(backend_selection_frame, text="SteamVR", variable = varbackend, value = 1, command = show_hide_backend_options).pack(side = tk.LEFT)
-        tk.Radiobutton(backend_selection_frame, text="VRChatOSC",  variable = varbackend, value = 2, command = show_hide_backend_options).pack(side = tk.LEFT)
-        backend_selection_frame.pack(side = tk.TOP)
+    tk.Label(backend_selection_frame, text="Backend: ").pack(side = tk.LEFT)
+    tk.Radiobutton(backend_selection_frame, text="SteamVR", variable = varbackend, value = 1, command = show_hide_backend_options).pack(side = tk.LEFT)
+    tk.Radiobutton(backend_selection_frame, text="VRChatOSC",  variable = varbackend, value = 2, command = show_hide_backend_options).pack(side = tk.LEFT)
+    backend_selection_frame.pack(side = tk.TOP)
 
-        tk.Label(backend_options_frame, text="IP/port:").pack(side = tk.LEFT)
-        backend_ip = tk.Entry(backend_options_frame, width = 15)
-        backend_ip.insert(0, param["backend_ip"])
-        backend_ip.pack(side = tk.LEFT)
-        backend_port = tk.Entry(backend_options_frame, width = 5)
-        backend_port.insert(0, param["backend_port"])
-        backend_port.pack(side = tk.LEFT)
+    tk.Label(backend_options_frame, text="IP/port:").pack(side = tk.LEFT)
+    backend_ip = tk.Entry(backend_options_frame, width = 15)
+    backend_ip.insert(0, param["backend_ip"])
+    backend_ip.pack(side = tk.LEFT)
+    backend_port = tk.Entry(backend_options_frame, width = 5)
+    backend_port.insert(0, param["backend_port"])
+    backend_port.pack(side = tk.LEFT)
 
-        show_hide_backend_options()
-        backend_frame.pack()
+    show_hide_backend_options()
+    backend_frame.pack()
 
     
     param["switch_advanced"] = False
@@ -212,6 +215,10 @@ def getparams():
     camera_height = camheight.get()
     camera_width = camwidth.get()
     
+    backend = int(varbackend.get())
+    backend_ip_set = backend_ip.get()
+    backend_port_set = int(backend_port.get())
+    
     if param["advanced"]:
         maximgsize = int(maximgsize.get())
         
@@ -222,9 +229,7 @@ def getparams():
         model_complexity = int(modelc.get())
         min_tracking_confidence = float(trackc.get())
         static_image = bool(varstatic.get())
-        backend = int(varbackend.get())
-        backend_ip_set = backend_ip.get()
-        backend_port_set = int(backend_port.get())
+        
     else:
         maximgsize = 640
         
@@ -235,9 +240,6 @@ def getparams():
         model_complexity = 1
         min_tracking_confidence = 0.5
         static_image = False
-        backend = 1
-        backend_ip_set = "127.0.0.1"
-        backend_port_set = 9000
 
     switch_advanced = param["switch_advanced"]
 

@@ -24,11 +24,11 @@ class Parameters():
         self.preview_skeleton = param["prevskel"]             #if True, whole skeleton will appear in vr 2 meters in front of you. Good to visualize if everything is working
         self.dont_wait_hmd = param["waithmd"]                  #dont wait for movement from hmd, start inference immediately.
         self.rotate_image = 0 # cv2.ROTATE_90_CLOCKWISE # cv2.ROTATE_90_COUTERCLOCKWISE # cv2.ROTATE_180 # None # if you want, rotate the camera
-        self.camera_latency = 0.1
-        self.smoothing_1 = 0.5
-        self.additional_smoothing_1 = 0
+        self.camera_latency = 0.0
+        self.smoothing_1 = 0.0
+        self.additional_smoothing_1 = 0.7
         self.smoothing_2 = 0.5
-        self.additional_smoothing_2 = 0
+        self.additional_smoothing_2 = 0.9
         self.feet_rotation = param["feetrot"]
         self.use_hands = param["use_hands"]
         self.ignore_hip = param["ignore_hip"]
@@ -76,7 +76,12 @@ class Parameters():
         self.smoothing = self.smoothing_1
         self.additional_smoothing = self.additional_smoothing_1
         
-        #self.prev_smoothing = self.smoothing
+        #if advanced mode is disabled, always reset smoothing and camera latency to 0
+        if not self.advanced:
+            self.smoothing = 0.0
+            self.smoothing_1 = 0.0
+            self.camera_latency = 0.0
+        
     
 
     def change_recalibrate(self):
