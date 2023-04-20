@@ -416,6 +416,9 @@ def make_inference_gui(_params):
     root = tk.Tk()
     InferenceWindow(root, _params).pack(side="top", fill="both", expand=True)
     root.mainloop()
+    
+def start_inference_gui(root):
+    root.mainloop()
 
 if __name__ == "__main__":
     #make_inference_gui()
