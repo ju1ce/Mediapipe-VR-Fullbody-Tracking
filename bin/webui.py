@@ -2,6 +2,8 @@
 # An object of Flask class is our WSGI application.
 from flask import Flask, render_template, request, redirect, url_for
 
+import numpy as np
+
 params = None
 
 # Flask constructor takes the name of
@@ -14,11 +16,16 @@ app = Flask(__name__)
 @app.route('/')
 # ‘/’ URL is bound with hello_world() function.
 def hello_world():
-    return render_template('index.html', name="there", smooth=params.additional_smoothing)
+    return render_template('index.html', name="there", smooth=np.round(params.additional_smoothing,2))
     
 @app.route('/smoothing', methods=["POST"])
 def smoothing():
-    params.change_additional_smoothing(float(request.form["value"]),paramid=1)
+    if request.form["action"] in options.keys():
+        newvalue = params.additional_smoothing + 0.1*options[request.form["action"]]
+    else:
+        newvalue = float(request.form["value"])
+    newvalue = np.clip(newvalue,0,1)
+    params.change_additional_smoothing(newvalue,paramid=1)
     return redirect(url_for("hello_world"))
     
 options = {
@@ -57,7 +64,7 @@ def scale():
     
 @app.route('/autocalib', methods=["POST"])
 def autocalib():
-    params.change_recalibrate()
+    params.gui.autocalibrate()
     return redirect(url_for("hello_world"))
  
 # main driver function
