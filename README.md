@@ -3,20 +3,27 @@ A test repository using Mediapipe for fullbody tracking in VR with a single came
 
 This is still a work in progress, but an executable is now available for anyone to try out. Compared to my other free fbt project, ApriltagTrackers, this works less acurately, you need far more room and depth detection is not the greatest, but it has the benefit of not needing trackers and being far easier to setup and use!
 
-For any questions or bug reports, please write into the ApriltagTrackers discord: https://discord.gg/g2ctkXB4bb
+---
+### **For any questions or bug reports, please write into the [ApriltagTrackers discord!](https://discord.gg/g2ctkXB4bb)**
+---
 
 ## Using VRChat OSC:
 
-If you are logged into github, you can go under the "Actions" tab and download the latest nightly release, which supports VRChats OSC trackers. It should be possible to use it for FBT on standalone quest VRChat. However, the current release is slightly broken. While it works, the rotations of joints are a bit wrong, which can cause some weird poses.
+The newest beta release supports VRChats OSC trackers. It should be possible to use it for FBT on standalone quest VRChat. To download it, go to the [releases](https://github.com/ju1ce/Mediapipe-VR-Fullbody-Tracking/releases) tab and download the 0.7 beta version.
 
-To install that version, you need to first download the latest stable release, which contains the driver files, and install the drivers using the install_driver.exe file. After that, you can download the latest artifact from Actions, and navigate to mediapipepose.exe. All other steps are the same as below, except for a few differences:
+To use OSC, change the backend parameter to VRChat OSC. If you will run VR on the same PC as mediapipepose, or you will use Quest 2 through link/VD/ALVR you can leave the IP at default. If you use quest standalone, enter the local IP address of your quest. If you use standalone, make sure to enable the WebUI option as well. 
 
-- Enable Advanced mode and change the connection type to VRChat OSC. On quest, also setup the ping and port (tutorials for that can be found elsewhere, such as SlimeVR OSC tutorials)
-- Automatic calibration no longer works for the first rotation and the scale. You will need to adjust them manualy.
-- Smoothing window setting will do nothing, to adjust smoothing set the Additional smoothing value
-- In OSC mode, the camera input must be mirrored. Use the mirror parameter.
+The process of using the OSC version is the same as regular, with a few differences:
+- When doing automatic calibration, it will not adjust Y rotation. Adjust it manualy until the skeleton aligns with your body.
+- Smoothing window is not supported, adjust smoothing using the Additional Smoothing parameter instead. It works better anyway
 
-Again, this build is experimental, so please message us with any issues or feedback on the ApriltagTrackers discord!
+### The WebUI:
+
+If you are on Quest standalone, you cannot access the normal UI while wearing the headset, making calibration that way quite difficult. Thats where you enable the webui.
+
+When starting up detection, the console will log the IP and port that you need to connect to. Open the web browser on Quest, enter the IP and port (NOT the 127.0.0.1 one) into the address bar, and open the page. A minimal UI should open, giving you control over the calibration parameters.
+
+**NOTE:** This build is still in beta, so make sure to report any issues either in the github issues, or on the [discord](https://discord.gg/g2ctkXB4bb).
 
 ## How to run:
 
@@ -107,6 +114,7 @@ For IP Webcam:
   - Make sure that you installed the driver with /driver_files/install_driver.exe, and that the driver installed properly
   - Open SteamVR settings -> startup -> addons, and make sure that apriltagtrackers is enabled
   - If SteamVR runs in administrator mode, you may have to run mediapipepose by running /bin/mediapipepose.exe as administrator
+  - If using for VRChat, you can also just use OSC instead
   
 **The tracking is unuseably bad:**
   
