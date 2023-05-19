@@ -69,6 +69,8 @@ def getparams():
         param["backend_port"] = 9000
     if "advanced" not in param:
         param["advanced"] = False
+    if "webui" not in param:
+        param["webui"] = False
        
     window = tk.Tk()
 
@@ -189,6 +191,11 @@ def getparams():
     show_hide_backend_options()
     backend_frame.pack()
 
+    tk.Label(text="-"*50, width = 50).pack()
+
+    varwebui = tk.IntVar(value = param["webui"])
+    webui_check = tk.Checkbutton(text = "Enable webui to control parameters from another device", variable = varwebui)
+    webui_check.pack()
     
     param["switch_advanced"] = False
     if param["advanced"]:
@@ -200,6 +207,8 @@ def getparams():
     tk.Button(text='Save and Continue', command=window.quit).pack()
 
     window.mainloop()
+
+#----------------------------------------------------------"
 
     cameraid = camid.get()
     #hmd_to_neck_offset = [float(val) for val in hmdoffsettext.get().split(" ")]
@@ -218,6 +227,8 @@ def getparams():
     backend = int(varbackend.get())
     backend_ip_set = backend_ip.get()
     backend_port_set = int(backend_port.get())
+    
+    webui = bool(varwebui.get())
     
     if param["advanced"]:
         maximgsize = int(maximgsize.get())
@@ -269,6 +280,7 @@ def getparams():
     param["backend"] = backend
     param["backend_ip"] = backend_ip_set
     param["backend_port"] = backend_port_set
+    param["webui"] = webui
     
     if switch_advanced:
         param["advanced"] = not advanced

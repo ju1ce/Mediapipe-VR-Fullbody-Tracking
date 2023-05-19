@@ -33,8 +33,11 @@ def main():
 
     params = parameters.Parameters()
     
-    webui_thread = threading.Thread(target=webui.start_webui, args=(params,), daemon=True)
-    webui_thread.start()
+    if params.webui:
+        webui_thread = threading.Thread(target=webui.start_webui, args=(params,), daemon=True)
+        webui_thread.start()
+    else:
+        print("INFO: WebUI disabled in parameters")
 
     backends = { 0: DummyBackend, 1: SteamVRBackend, 2: VRChatOSCBackend }
     backend = backends[params.backend]()

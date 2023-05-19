@@ -40,6 +40,8 @@ class Parameters():
         self.backend = param["backend"]
         self.backend_ip = param["backend_ip"]
         self.backend_port = param["backend_port"]
+        
+        self.webui = param["webui"]
 
         self.calib_rot = True
         self.calib_tilt = True

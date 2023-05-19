@@ -73,4 +73,6 @@ def start_webui(param):
     params=param
     # run() method of Flask class runs the application
     # on the local development server.
+    print("INFO: Starting WebUI!")
+    print("INFO: To access the webui, simply open the second Running on IP address on your quests browser!")
     app.run(host="0.0.0.0")
