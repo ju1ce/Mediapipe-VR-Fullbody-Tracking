@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>FlaskApp</title>
+</head>
+<style>
+  
+.form-button {
+	width: 200px;
+	height: 50px;
+	margin: 10px;}
+	
+.wide-button {
+	width: 400px;
+	height: 50px;
+	margin: 10px;}
+	
+.form-inline {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  margin: 0px;
+}
+  
+</style>
+<body>
+    <h1>Hello {{name}}!</h1>
+    <h2>Update rotation Y</h2>
+		<form action = "/roty" method = "post" class="form-inline">
+			
+			<p><input class="form-button" type = "submit" name = "action" value = "<<" /></p>
+			<p><input class="form-button" type = "submit" name = "action" value = "<" /></p>
+			<p><input class="form-button" type = "submit" name = "action" value = ">" /></p>
+			<p><input class="form-button" type = "submit" name = "action" value = ">>" /></p>
+		</form>
+	<h2>Update rotation X</h2>
+		<form action = "/rotx" method = "post" class="form-inline">
+			
+			<p><input class="form-button" type = "submit" name = "action" value = "<<" /></p>
+			<p><input class="form-button" type = "submit" name = "action" value = "<" /></p>
+			<p><input class="form-button" type = "submit" name = "action" value = ">" /></p>
+			<p><input class="form-button" type = "submit" name = "action" value = ">>" /></p>
+		</form>
+	<h2>Update rotation Z</h2>
+		<form action = "/rotz" method = "post" class="form-inline">
+			
+			<p><input class="form-button" type = "submit" name = "action" value = "<<" /></p>
+			<p><input class="form-button" type = "submit" name = "action" value = "<" /></p>
+			<p><input class="form-button" type = "submit" name = "action" value = ">" /></p>
+			<p><input class="form-button" type = "submit" name = "action" value = ">>" /></p>
+		</form>
+	<h2>Update Scale</h2>
+		<form action = "/scale" method = "post" class="form-inline">
+			
+			<p><input class="form-button" type = "submit" name = "action" value = "<<" /></p>
+			<p><input class="form-button" type = "submit" name = "action" value = "<" /></p>
+			<p><input class="form-button" type = "submit" name = "action" value = ">" /></p>
+			<p><input class="form-button" type = "submit" name = "action" value = ">>" /></p>
+		</form>
+	
+		<form action = "/autocalib" method = "post" class="form-inline">
+			<p><input class="wide-button" type = "submit" value = "Autocalibrate" /></p>	
+		</form>
+		
+	<h2>Update Smoothing</h2>	
+		<form action = "/smoothing" method = "post" class="form-inline">
+			 <p>Additional smoothing:</p>
+			 <p><input type = "text" name = "value" value="{{smooth}}" class="form-button" /></p>
+			 <p><input type = "submit" value = "Update" class="form-button" name = "action" /></p>
+			 <p><input class="form-button" type = "submit" name = "action" value = "<" /></p>
+			 <p><input class="form-button" type = "submit" name = "action" value = ">" /></p>
+		 </form>
+	
+</body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<style>
+  
+.rangeslider{
+    width: 50%;
+}
+  
+.myslider {
+    -webkit-appearance: none;
+    background: #FCF3CF  ;
+    width: 50%;
+    height: 20px;
+    opacity: 2;
+   }
+  
+  
+.myslider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    cursor: pointer;
+    background: #34495E  ;
+    width: 5%;
+    height: 20px;
+}
+  
+  
+.myslider:hover {
+    opacity: 1;
+}
+  
+</style>
+<body>
+  
+<h1>Example of Range Slider Using Javascript</h1>
+<p>Use the slider to increment or decrement value.</p>
+  
+<div class="rangeslider">
+  <input type="range" min="1" max="100" value="10"
+                  class="myslider" id="sliderRange">
+  <p>Value: <span id="demo"></span></p>
+</div>
+  
+<script>
+var rangeslider = document.getElementById("sliderRange");
+var output = document.getElementById("demo");
+output.innerHTML = rangeslider.value;
+  
+rangeslider.oninput = function() {
+  output.innerHTML = this.value;
+}
+</script>
+  
+</body>
+</html>

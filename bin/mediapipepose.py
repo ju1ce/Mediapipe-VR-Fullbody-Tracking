@@ -13,9 +13,12 @@ import numpy as np
 from helpers import  CameraStream, shutdown, mediapipeTo3dpose, get_rot_mediapipe, get_rot_hands, draw_pose, keypoints_to_original, normalize_screen_coordinates, get_rot
 from scipy.spatial.transform import Rotation as R
 from backends import DummyBackend, SteamVRBackend, VRChatOSCBackend
+import webui
 
 import inference_gui
 import parameters
+
+import tkinter as tk
 
 import mediapipe as mp
 
@@ -25,10 +28,16 @@ def main():
     mp_pose = mp.solutions.pose
 
     use_steamvr = True
-
+    
     print("INFO: Reading parameters...")
 
     params = parameters.Parameters()
+    
+    if params.webui:
+        webui_thread = threading.Thread(target=webui.start_webui, args=(params,), daemon=True)
+        webui_thread.start()
+    else:
+        print("INFO: WebUI disabled in parameters")
 
     backends = { 0: DummyBackend, 1: SteamVRBackend, 2: VRChatOSCBackend }
     backend = backends[params.backend]()
@@ -41,6 +50,7 @@ def main():
 
     camera_thread = CameraStream(params)
 
+    #making gui
     gui_thread = threading.Thread(target=inference_gui.make_inference_gui, args=(params,), daemon=True)
     gui_thread.start()
 
