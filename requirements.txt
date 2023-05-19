@@ -4,3 +4,4 @@ scipy
 mediapipe
 python-osc
 pyinstaller
+flask
